@@ -2,15 +2,25 @@
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFramework>net9.0-windows8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<UseWindowsForms>true</UseWindowsForms>
 		<UseWPF>True</UseWPF>
 		<NoWarn>$(NoWarn);WFO1000</NoWarn>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<Platforms>AnyCPU;x64</Platforms>
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Content Remove="C:\Users\fel\.nuget\packages\sharpfont.dependencies\2.6.0\build\..\bin\msvc10\x86\freetype6.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="fonts\Antonio-Bold.ttf" />
+	  <None Remove="fonts\Antonio-Light.ttf" />
+	  <None Remove="fonts\Antonio-Regular.ttf" />
+	  <None Remove="fonts\OCRAEXT.TTF" />
 	  <None Remove="Icons\abacus.png" />
 	  <None Remove="Icons\anchor.png" />
 	  <None Remove="Icons\application-tile.png" />
@@ -64,11 +74,28 @@
 	  <None Remove="Icons\question.png" />
 	  <None Remove="Icons\ruler-triangle.png" />
 	  <None Remove="Icons\wrench-screwdriver.png" />
+	  <None Remove="shaders\cam_space_shader.fs" />
+	  <None Remove="shaders\cam_space_shader.vs" />
+	  <None Remove="shaders\text.fs" />
+	  <None Remove="shaders\text.vs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="fonts\Antonio-Bold.ttf" />
+	  <EmbeddedResource Include="fonts\Antonio-Light.ttf" />
+	  <EmbeddedResource Include="fonts\Antonio-Regular.ttf" />
+	  <EmbeddedResource Include="fonts\OCRAEXT.TTF" />
+	  <EmbeddedResource Include="shaders\cam_space_shader.fs" />
+	  <EmbeddedResource Include="shaders\cam_space_shader.vs" />
+	  <EmbeddedResource Include="shaders\text.fs" />
+	  <EmbeddedResource Include="shaders\text.vs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="OpenTK" Version="4.9.4" />
 		<PackageReference Include="OpenTK.GLControl" Version="4.0.2" />
+		<PackageReference Include="SharpFont.Dependencies.x64" Version="2.6.0" />
+		<PackageReference Include="SpaceWizards.SharpFont" Version="1.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
