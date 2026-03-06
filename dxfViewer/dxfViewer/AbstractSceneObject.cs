@@ -11,8 +11,9 @@ namespace dxfViewer
         {
             
         }
+        public Vector2d Offset { get; set; }
         public bool Frozen { get; set; }
-
+        public Vector3d[] BBox { get; set; }
         public AbstractSceneObject(XElement item)
         {
             
@@ -50,8 +51,8 @@ namespace dxfViewer
         public ISceneObject Parent { get; set; }
         public int Id { get; set; }
 
-        
-        public Matrix4d Matrix { get; set; }
+
+        public Matrix4d Matrix { get; set; } = Matrix4d.Identity;
         public int Z { get; set; }
     }
 }

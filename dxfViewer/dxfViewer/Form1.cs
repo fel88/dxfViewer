@@ -337,8 +337,8 @@ namespace dxfViewer
             foreach (var item in doc.Entities.Arcs)
             {
 
-                int n = 10;
-                var pl = item.ToPolyline2D(n);
+                
+                var pl = item.ToPolyline2D(PolylinePrecisionDivider);
                 cnt++;
                 //if (cnt > 100000)
                 //  break;
@@ -366,8 +366,11 @@ namespace dxfViewer
                 vv.AddRange(vvv.ToArray());
                 if (vv.Count > 10000)
                 {
-                    PolylineGpuObject g = new PolylineGpuObject(vv.ToArray()) { PrimitiveType = PrimitiveType.Lines };
+                    var arr1 = vv.ToArray();
+                    PolylineGpuObject g = new PolylineGpuObject(arr1) { PrimitiveType = PrimitiveType.Lines };
                     PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+                    sceneObject.CalcBbox(arr1);
+
                     vv.Clear();
                     Parts.Add(sceneObject);
                 }
@@ -378,6 +381,8 @@ namespace dxfViewer
             {
                 PolylineGpuObject g = new PolylineGpuObject(vv.ToArray()) { PrimitiveType = PrimitiveType.Lines };
                 PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+                sceneObject.CalcBbox(vv.ToArray());
+
                 vv.Clear();
                 Parts.Add(sceneObject);
             }
@@ -388,17 +393,20 @@ namespace dxfViewer
             }
             foreach (var item in doc.Entities.Lines)
             {
-                int n = 20;
+                
                 var verts = new netDxf.Vector3[] { item.StartPoint, item.EndPoint };
                 //  if (first == null)
                 //  first = new Vector3d(verts[0].X, verts[0].Y, 0);
-                PolylineGpuObject g = new PolylineGpuObject(verts.Select(z => new Vector3d(z.X, z.Y, 0)).ToArray()) { PrimitiveType = PrimitiveType.Lines };
+                var arr1 = verts.Select(z => new Vector3d(z.X, z.Y, 0)).ToArray();
+                PolylineGpuObject g = new PolylineGpuObject(arr1) { PrimitiveType = PrimitiveType.Lines };
                 PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+                sceneObject.CalcBbox(arr1.ToArray());
+
 
                 Parts.Add(sceneObject);
             }
         }
-
+        int PolylinePrecisionDivider = 10;
         internal void SwitchColorTheme()
         {
             darkMode = !darkMode;
@@ -408,10 +416,13 @@ namespace dxfViewer
         {
             var d = AutoDialog.DialogHelpers.StartDialog();
             d.AddBoolField("drawAxes", "Draw axes", drawAxes);
+            d.AddIntegerNumericField("PolylinePrecisionDivider", "PolylinePrecisionDivider", PolylinePrecisionDivider);
+            
             if (!d.ShowDialog())
                 return;
 
             drawAxes = d.GetBoolField("drawAxes");
+            PolylinePrecisionDivider = d.GetIntegerNumericField("PolylinePrecisionDivider");
         }
 
         internal void Clear()
@@ -461,6 +472,36 @@ namespace dxfViewer
             var pnts = Parts.SelectMany(z => z.GetPoints()).ToArray();
             if (pnts.Any())
                 FitToPoints(pnts, camera1);
+        }
+
+        internal void Centrify()
+        {
+            List<Vector3d> centers = new List<Vector3d>();
+            foreach (var item in Parts)
+            {
+                var center = new Vector3d();
+                foreach (var pitem in item.BBox)
+                {
+                    center += pitem;
+                }
+                if (item.BBox.Length > 0)
+                    center /= item.BBox.Length;
+                centers.Add(center);
+
+            }
+            Vector3d center0 = new Vector3d();
+            foreach (var item in centers)
+            {
+                center0 += item;
+            }
+            center0 /= centers.Count;
+            foreach (var item in Parts)
+            {
+                item.Matrix = Matrix4d.CreateTranslation(-center0);
+
+               // item.Offset = -new Vector2d(center0.X, center0.Y);
+            }
+
         }
     }
 }

@@ -58,7 +58,7 @@
                     <RibbonButton
                         Click="Move_click"
                         KeyTip="M"
-                        Label="Move"
+                        Label="Centrify"
                         SmallImageSource="Icons/arrow-move.png" />
                 </RibbonGroup>
 

@@ -60,7 +60,7 @@ namespace dxfViewer
 
         private void Move_click(object sender, RoutedEventArgs e)
         {
-            // Form.MoveSelected();
+            Form.Centrify();
         }
 
         private void Rect_click(object sender, RoutedEventArgs e)

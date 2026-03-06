@@ -28,12 +28,14 @@ namespace dxfViewer
         {
             this.gpuObject = gpuObject;
         }
-        public Vector3d[] BBox;
+
         public override IEnumerable<Vector3d> GetPoints()
         {
             var mtrx = Matrix;
+            if (BBox != null)
+                return BBox.Select(z => mtrx.ExtractTranslation() + z);
 
-            return BBox.Select(z => Vector3d.TransformVector(z, mtrx));
+            return [];
         }
 
 
@@ -53,6 +55,8 @@ namespace dxfViewer
             return matrix4;
         }
 
+
+
         public override void Draw(GpuDrawingContext ctx)
         {
             if (!Visible)
@@ -68,7 +72,8 @@ namespace dxfViewer
             Matrix4d dd = Matrix;
             GL.MultMatrix(ref dd);
             ctx.SetModelShader();
-            //ctx.ModelShader.setMat4("model", ToMatrix4(dd));
+            ctx.ModelShader.setMat4("model", ToMatrix4(dd));
+            //ctx.ModelShader.setMat4("model", Matrix4.CreateTranslation((float)Offset.X, (float)Offset.Y, 0));
 
             gpuObject.Draw();
 
@@ -82,6 +87,21 @@ namespace dxfViewer
             }
 
             GL.PopMatrix();
+        }
+
+        internal void CalcBbox(Vector3d[] arr1)
+        {
+            var minx = arr1.Min(z => z.X);
+            var miny = arr1.Min(z => z.Y);
+            var maxx = arr1.Max(z => z.X);
+            var maxy = arr1.Max(z => z.Y);
+            BBox = new Vector3d[]
+            {
+                        new Vector3d (minx,miny,0),
+                        new Vector3d (minx,maxy,0),
+                        new Vector3d (maxx,maxy,0),
+                        new Vector3d (maxx,miny,0),
+            };
         }
     }
 }
