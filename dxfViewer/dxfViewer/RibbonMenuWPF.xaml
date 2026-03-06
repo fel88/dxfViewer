@@ -1,0 +1,99 @@
+﻿<UserControl
+    x:Class="dxfViewer.RibbonMenuWPF"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:dxfViewer"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Ribbon x:Name="RibbonWin" SelectedIndex="0">
+            <Ribbon.HelpPaneContent>
+                <RibbonButton
+                    x:Name="HelpButton"
+                    Click="HelpButton_Click"
+                    SmallImageSource="Icons\question.png" />
+            </Ribbon.HelpPaneContent>
+            <Ribbon.ApplicationMenu>
+                <RibbonApplicationMenu Visibility="Collapsed" />
+            </Ribbon.ApplicationMenu>
+            <Ribbon.QuickAccessToolBar>
+                <RibbonQuickAccessToolBar Visibility="Collapsed" />
+            </Ribbon.QuickAccessToolBar>
+            <RibbonTab
+                x:Name="projectTab"
+                Header="Project"
+                KeyTip="H">
+                <!--  Home  group  -->
+                <RibbonGroup x:Name="General" Header="General">
+                    <RibbonButton
+                        Click="Selection_click"
+                        KeyTip="X"
+                        Label="Selection"
+                        SmallImageSource="Icons/cursor.ico" />
+                    <RibbonButton
+                        Click="FitAll_click"
+                        KeyTip="F"
+                        Label="Fit all"
+                        SmallImageSource="Icons/magnifier.ico" />
+
+                </RibbonGroup>
+                <RibbonGroup x:Name="Scene" Header="Scene">
+                    <RibbonButton
+                        Click="Delete_click"
+                        KeyTip="D"
+                        Label="Delete"
+                        SmallImageSource="Icons/cross-button.ico" />
+                    <RibbonButton
+                        Click="Move_click"
+                        KeyTip="M"
+                        Label="Move"
+                        SmallImageSource="Icons/arrow-move.png" />
+                </RibbonGroup>
+
+
+                <RibbonGroup x:Name="project" Header="Project">
+                    <RibbonButton
+                        Click="OpenProject_click"
+                        KeyTip="B"
+                        Label="Open"
+                        SmallImageSource="Icons/folder-horizontal-open.png" />
+
+                    <RibbonButton
+                        Click="Clear_click"
+                        KeyTip="S"
+                        Label="Clear"
+                        SmallImageSource="Icons/broom.png" />
+                </RibbonGroup>
+
+
+
+
+
+                <RibbonGroup x:Name="layers" Header="Layers">
+                    <RibbonButton
+                        Click="ShowHideLayersPanel_click"
+                        KeyTip="B"
+                        Label="Show/hide panel"
+                        SmallImageSource="Icons/layers-stack.png" />
+
+                </RibbonGroup>
+
+                <RibbonGroup x:Name="settings" Header="Settings ">
+                    <RibbonButton Label="Settings" SmallImageSource="Icons/gear.png" />
+                </RibbonGroup>
+
+            </RibbonTab>
+
+
+
+        </Ribbon>
+    </Grid>
+</UserControl>

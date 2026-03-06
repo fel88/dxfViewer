@@ -1,0 +1,151 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<UseWPF>True</UseWPF>
+		<NoWarn>$(NoWarn);WFO1000</NoWarn>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Icons\abacus.png" />
+	  <None Remove="Icons\anchor.png" />
+	  <None Remove="Icons\application-tile.png" />
+	  <None Remove="Icons\arrow-045.png" />
+	  <None Remove="Icons\arrow-circle-315.png" />
+	  <None Remove="Icons\arrow-curve-180-left.ico" />
+	  <None Remove="Icons\arrow-move.png" />
+	  <None Remove="Icons\arrow-resize.ico" />
+	  <None Remove="Icons\arrow-skip-090.ico" />
+	  <None Remove="Icons\blue-document-export.png" />
+	  <None Remove="Icons\blue-document-view.png" />
+	  <None Remove="Icons\blue-document.png" />
+	  <None Remove="Icons\broom.png" />
+	  <None Remove="Icons\chain-unchain.png" />
+	  <None Remove="Icons\chain.png" />
+	  <None Remove="Icons\color.png" />
+	  <None Remove="Icons\cross-button.ico" />
+	  <None Remove="Icons\cursor.ico" />
+	  <None Remove="Icons\cutter.png" />
+	  <None Remove="Icons\disk.ico" />
+	  <None Remove="Icons\eraser.ico" />
+	  <None Remove="Icons\eye.png" />
+	  <None Remove="Icons\fill-090.png" />
+	  <None Remove="Icons\fill-270.png" />
+	  <None Remove="Icons\folder-horizontal-open.png" />
+	  <None Remove="Icons\gear.png" />
+	  <None Remove="Icons\grid-dot.png" />
+	  <None Remove="Icons\grid.png" />
+	  <None Remove="Icons\image-sunset.png" />
+	  <None Remove="Icons\infocard.png" />
+	  <None Remove="Icons\layer-flip-vertical.png" />
+	  <None Remove="Icons\layer-flip.png" />
+	  <None Remove="Icons\layer-resize.png" />
+	  <None Remove="Icons\layer-shape-ellipse.ico" />
+	  <None Remove="Icons\layer-shape-line.ico" />
+	  <None Remove="Icons\layer-shape-polygon.png" />
+	  <None Remove="Icons\layer-shape-round.png" />
+	  <None Remove="Icons\layer-shape-text.png" />
+	  <None Remove="Icons\layer-shape.ico" />
+	  <None Remove="Icons\layers-stack.png" />
+	  <None Remove="Icons\license-key.png" />
+	  <None Remove="Icons\light-bulb-off.png" />
+	  <None Remove="Icons\light-bulb.ico" />
+	  <None Remove="Icons\magnet.ico" />
+	  <None Remove="Icons\magnifier-zoom-actual-equal.png" />
+	  <None Remove="Icons\magnifier.ico" />
+	  <None Remove="Icons\molecule.png" />
+	  <None Remove="Icons\picture.png" />
+	  <None Remove="Icons\plug-connect.png" />
+	  <None Remove="Icons\puzzle.png" />
+	  <None Remove="Icons\question.png" />
+	  <None Remove="Icons\ruler-triangle.png" />
+	  <None Remove="Icons\wrench-screwdriver.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="OpenTK" Version="4.9.4" />
+		<PackageReference Include="OpenTK.GLControl" Version="4.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Icons\abacus.png" />
+	  <Resource Include="Icons\anchor.png" />
+	  <Resource Include="Icons\application-tile.png" />
+	  <Resource Include="Icons\arrow-045.png" />
+	  <Resource Include="Icons\arrow-circle-315.png" />
+	  <Resource Include="Icons\arrow-curve-180-left.ico" />
+	  <Resource Include="Icons\arrow-move.png" />
+	  <Resource Include="Icons\arrow-resize.ico" />
+	  <Resource Include="Icons\arrow-skip-090.ico" />
+	  <Resource Include="Icons\blue-document-export.png" />
+	  <Resource Include="Icons\blue-document-view.png" />
+	  <Resource Include="Icons\blue-document.png" />
+	  <Resource Include="Icons\broom.png" />
+	  <Resource Include="Icons\chain-unchain.png" />
+	  <Resource Include="Icons\chain.png" />
+	  <Resource Include="Icons\color.png" />
+	  <Resource Include="Icons\cross-button.ico" />
+	  <Resource Include="Icons\cursor.ico" />
+	  <Resource Include="Icons\cutter.png" />
+	  <Resource Include="Icons\disk.ico" />
+	  <Resource Include="Icons\eraser.ico" />
+	  <Resource Include="Icons\eye.png" />
+	  <Resource Include="Icons\fill-090.png" />
+	  <Resource Include="Icons\fill-270.png" />
+	  <Resource Include="Icons\folder-horizontal-open.png" />
+	  <Resource Include="Icons\gear.png" />
+	  <Resource Include="Icons\grid-dot.png" />
+	  <Resource Include="Icons\grid.png" />
+	  <Resource Include="Icons\image-sunset.png" />
+	  <Resource Include="Icons\infocard.png" />
+	  <Resource Include="Icons\layer-flip-vertical.png" />
+	  <Resource Include="Icons\layer-flip.png" />
+	  <Resource Include="Icons\layer-resize.png" />
+	  <Resource Include="Icons\layer-shape-ellipse.ico" />
+	  <Resource Include="Icons\layer-shape-line.ico" />
+	  <Resource Include="Icons\layer-shape-polygon.png" />
+	  <Resource Include="Icons\layer-shape-round.png" />
+	  <Resource Include="Icons\layer-shape-text.png" />
+	  <Resource Include="Icons\layer-shape.ico" />
+	  <Resource Include="Icons\layers-stack.png" />
+	  <Resource Include="Icons\license-key.png" />
+	  <Resource Include="Icons\light-bulb-off.png" />
+	  <Resource Include="Icons\light-bulb.ico" />
+	  <Resource Include="Icons\magnet.ico" />
+	  <Resource Include="Icons\magnifier-zoom-actual-equal.png" />
+	  <Resource Include="Icons\magnifier.ico" />
+	  <Resource Include="Icons\molecule.png" />
+	  <Resource Include="Icons\picture.png" />
+	  <Resource Include="Icons\plug-connect.png" />
+	  <Resource Include="Icons\puzzle.png" />
+	  <Resource Include="Icons\question.png" />
+	  <Resource Include="Icons\ruler-triangle.png" />
+	  <Resource Include="Icons\wrench-screwdriver.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Properties\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Properties\Resources.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="RibbonMenuWPF.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</None>
+	</ItemGroup>
+
+</Project>
