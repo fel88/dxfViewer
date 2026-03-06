@@ -1,3 +1,4 @@
+using netDxf.Entities;
 using OpenTK.GLControl;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -53,10 +54,10 @@ namespace dxfViewer
         {
             if (e.Button == MouseButtons.Middle)
             {
-               // if (pick != null)
+                // if (pick != null)
                 {
                     middleDrag = true;
-                  //  startMeasurePick = pick;
+                    //  startMeasurePick = pick;
                 }
             }
 
@@ -78,6 +79,8 @@ namespace dxfViewer
         public Camera camera1;
         public CameraViewManager ViewManager;
         bool first = true;
+
+        bool darkMode = true;
         void Redraw()
         {
 
@@ -99,42 +102,31 @@ namespace dxfViewer
             GL.Enable(EnableCap.DepthTest);
 
             float zz = -500;
-            GL.Begin(PrimitiveType.Quads);
-            GL.Color3(Color.LightBlue);
-            GL.Vertex3(-glControl.Width / 2, -glControl.Height / 2, zz);
-            GL.Vertex3(glControl.Width / 2, -glControl.Height / 2, zz);
-            GL.Color3(Color.AliceBlue);
-            GL.Vertex3(glControl.Width / 2, glControl.Height / 2, zz);
-            GL.Vertex3(-glControl.Width / 2, glControl.Height, zz);
-            GL.End();
+            if (darkMode)
+            {
+                gpuCtx.ModelColor = Color.FromArgb(255, 255, 255);
+                GL.Begin(PrimitiveType.Quads);
+                GL.Color3(Color.Black);
+                GL.Vertex3(-glControl.Width / 2, -glControl.Height / 2, zz);
+                GL.Vertex3(glControl.Width / 2, -glControl.Height / 2, zz);
+                GL.Color3(Color.Black);
+                GL.Vertex3(glControl.Width / 2, glControl.Height / 2, zz);
+                GL.Vertex3(-glControl.Width / 2, glControl.Height, zz);
+                GL.End();
+            }
+            else
+            {
+                gpuCtx.ModelColor = Color.FromArgb(255, 128, 64);
+                GL.Begin(PrimitiveType.Quads);
+                GL.Color3(Color.LightBlue);
+                GL.Vertex3(-glControl.Width / 2, -glControl.Height / 2, zz);
+                GL.Vertex3(glControl.Width / 2, -glControl.Height / 2, zz);
+                GL.Color3(Color.AliceBlue);
+                GL.Vertex3(glControl.Width / 2, glControl.Height / 2, zz);
+                GL.Vertex3(-glControl.Width / 2, glControl.Height, zz);
+                GL.End();
+            }
 
-            GL.PushMatrix();
-            GL.Translate(camera1.viewport[2] / 2 - 50, -camera1.viewport[3] / 2 + 50, 0);
-            GL.Scale(0.5, 0.5, 0.5);
-
-            var mtr = camera1.ViewMatrix;
-            var q = mtr.ExtractRotation();
-            var mtr3 = Matrix4.CreateFromQuaternion(q);
-            GL.MultMatrix(ref mtr3);
-            GL.LineWidth(2);
-            GL.Color3(Color.Red);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0, 0, 0);
-            GL.Vertex3(100, 0, 0);
-            GL.End();
-
-            GL.Color3(Color.Green);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0, 0, 0);
-            GL.Vertex3(0, 100, 0);
-            GL.End();
-
-            GL.Color3(Color.Blue);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Vertex3(0, 0, 0);
-            GL.Vertex3(0, 0, 100);
-            GL.End();
-            GL.PopMatrix();
             camera1.Setup(glControl.Size);
 
             if (drawAxes)
@@ -161,9 +153,10 @@ namespace dxfViewer
                 GL.End();
                 GL.PopMatrix();
             }
+            GL.LineWidth(1);
 
             GL.Color3(Color.Blue);
-            GL.Enable(EnableCap.Lighting);
+            GL.Disable(EnableCap.Lighting);
             GL.Enable(EnableCap.Light0);
 
             GL.ShadeModel(ShadingModel.Smooth);
@@ -203,7 +196,7 @@ namespace dxfViewer
 
             if (first)
             {
-                camera1 = new Camera() { IsOrtho = true };
+                camera1 = new Camera() { IsOrtho = true, CamTo = new Vector3(0, 0, 0), CamFrom = new Vector3(0, 0, 100), CamUp = new Vector3(0, 1, 0) };
                 gpuCtx = new GpuDrawingContext()
                 {
                     Camera = camera1,
@@ -289,7 +282,185 @@ namespace dxfViewer
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            glControl.Invalidate();            
+            glControl.Invalidate();
+        }
+
+        internal void ResetCamera()
+        {
+            camera1.CamTo = new Vector3(0, 0, 0);
+            camera1.CamFrom = new Vector3(0, 0, 100);
+            camera1.CamUp = new Vector3(0, 1, 0);
+        }
+
+        internal void OpenDxf()
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            if (ofd.ShowDialog() != DialogResult.OK)
+                return;
+
+            var doc = netDxf.DxfDocument.Load(ofd.FileName);
+            int cnt = 0;
+            List<Vector3d> vv = new List<Vector3d>();
+            Vector3d sum = new Vector3d();
+            //Vector3d? first = null;
+            foreach (var item in doc.Entities.Solids)
+            {
+
+            }
+            foreach (var item in doc.Entities.Hatches)
+            {
+                foreach (var gitem in item.BoundaryPaths)
+                {
+
+                    foreach (var d in gitem.Edges)
+                    {
+
+                        if (d is HatchBoundaryPath.Polyline pl)
+                        {
+                            if (pl.IsClosed)
+                            {
+
+                            }
+                            if (pl.Vertexes.Count() > 4)
+                            {
+
+                            }
+                        }
+                    }
+                    foreach (var d in gitem.Entities)
+                    {
+
+                    }
+                }
+            }
+
+            foreach (var item in doc.Entities.Arcs)
+            {
+
+                int n = 10;
+                var pl = item.ToPolyline2D(n);
+                cnt++;
+                //if (cnt > 100000)
+                //  break;
+
+                var verts = pl.Vertexes;
+                List<Vector3d> vvv = new List<Vector3d>();
+                var pos = new Vector3d(verts[0].Position.X, verts[0].Position.Y, 0);
+
+                //if (first == null)
+                //   first = pos;
+                //  pos -= first.Value;
+                vvv.Add(pos);
+                for (int i = 1; i < verts.Count - 1; i++)
+                {
+                    netDxf.Entities.Polyline2DVertex vitem = verts[i];
+                    pos = new Vector3d(vitem.Position.X, vitem.Position.Y, 0);
+                    // pos -= first.Value;
+                    sum += pos;
+
+                    vvv.Add(pos);
+                    vvv.Add(pos);
+                }
+                vvv.Add(new Vector3d(verts[^1].Position.X, verts[^1].Position.Y, 0));
+
+                vv.AddRange(vvv.ToArray());
+                if (vv.Count > 10000)
+                {
+                    PolylineGpuObject g = new PolylineGpuObject(vv.ToArray()) { PrimitiveType = PrimitiveType.Lines };
+                    PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+                    vv.Clear();
+                    Parts.Add(sceneObject);
+                }
+
+
+            }
+            if (vv.Count > 0)
+            {
+                PolylineGpuObject g = new PolylineGpuObject(vv.ToArray()) { PrimitiveType = PrimitiveType.Lines };
+                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+                vv.Clear();
+                Parts.Add(sceneObject);
+            }
+            sum /= cnt;
+            foreach (var item in Parts)
+            {
+                //item.Matrix.Items.Add(new TranslateTransformChainItem() { Vector = -sum });
+            }
+            foreach (var item in doc.Entities.Lines)
+            {
+                int n = 20;
+                var verts = new netDxf.Vector3[] { item.StartPoint, item.EndPoint };
+                //  if (first == null)
+                //  first = new Vector3d(verts[0].X, verts[0].Y, 0);
+                PolylineGpuObject g = new PolylineGpuObject(verts.Select(z => new Vector3d(z.X, z.Y, 0)).ToArray()) { PrimitiveType = PrimitiveType.Lines };
+                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+
+                Parts.Add(sceneObject);
+            }
+        }
+
+        internal void SwitchColorTheme()
+        {
+            darkMode = !darkMode;
+        }
+
+        internal void Settings()
+        {
+            var d = AutoDialog.DialogHelpers.StartDialog();
+            d.AddBoolField("drawAxes", "Draw axes", drawAxes);
+            if (!d.ShowDialog())
+                return;
+
+            drawAxes = d.GetBoolField("drawAxes");
+        }
+
+        internal void Clear()
+        {
+            Parts.Clear();
+        }
+        public void FitToPoints(Vector3d[] pnts, Camera cam, float gap = 10)
+        {
+            List<Vector2d> vv = new List<Vector2d>();
+            foreach (var vertex in pnts)
+            {
+                var p = MouseRay.Project(vertex.ToVector3(), cam.ProjectionMatrix, cam.ViewMatrix, cam.WorldMatrix, camera1.viewport);
+                vv.Add(p.Xy.ToVector2d());
+            }
+
+            //prjs->xy coords
+            var minx = vv.Min(z => z.X) - gap;
+            var maxx = vv.Max(z => z.X) + gap;
+            var miny = vv.Min(z => z.Y) - gap;
+            var maxy = vv.Max(z => z.Y) + gap;
+
+            var dx = (maxx - minx);
+            var dy = (maxy - miny);
+
+            var cx = dx / 2;
+            var cy = dy / 2;
+            var dir = cam.CamTo - cam.CamFrom;
+            //center back to 3d
+
+            var mr = new MouseRay((float)(cx + minx), (float)(cy + miny), cam);
+            var v0 = mr.Start;
+
+            cam.CamFrom = v0;
+            cam.CamTo = cam.CamFrom + dir;
+
+            var aspect = glControl.Width / (float)(glControl.Height);
+
+            dx /= glControl.Width;
+            dx *= camera1.OrthoWidth;
+            dy /= glControl.Height;
+            dy *= camera1.OrthoWidth;
+
+            cam.OrthoWidth = (float)Math.Max(dx, dy);
+        }
+        internal void FitAll()
+        {
+            var pnts = Parts.SelectMany(z => z.GetPoints()).ToArray();
+            if (pnts.Any())
+                FitToPoints(pnts, camera1);
         }
     }
 }

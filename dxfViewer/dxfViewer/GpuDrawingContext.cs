@@ -6,7 +6,7 @@ namespace dxfViewer
     {
         public Camera Camera;
         Vector3 lightPos = new Vector3(1000f, 1000f, 400.0f);
-        Color ModelColor = Color.FromArgb(255, 128, 64);
+        public Color ModelColor = Color.FromArgb(255, 128, 64);
         Color LightColor = Color.FromArgb(255, 255, 255);
         float _diffuseValue = 0.8f;
         float _ambientValue = 0.8f;

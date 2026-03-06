@@ -8,7 +8,7 @@ namespace dxfViewer
         {
             var dir = Camera.CamFrom - Camera.CamTo;
             var cv = dir;
-            var moveVec = new Vector3(cv.X, cv.Y, cv.Z).Normalized();
+            var moveVec = new Vector3(cv.X, cv.Y, 0).Normalized();
             var a1 = Vector3.Cross(Camera.CamUp, cv.Normalized()); ;
             //var moveVecTan = new Vector3(-moveVec.Y, moveVec.X, );
             var moveVecTan = a1.Normalized();
@@ -21,22 +21,20 @@ namespace dxfViewer
             {
                 if (drag2)
                 {
-
-
                     zoom = Control.Width / Camera.OrthoWidth;
 
                     var dx = moveVecTan * ((startPosX - pos.X) / zoom) + moveVec * ((startPosY - pos.Y) / zoom);
                     Camera.CamFrom = cameraFromStart + dx;
                     Camera.CamTo = cameraToStart + dx;
                 }
-                if (drag)
+                if (false && drag)
                 {
                     //rotate here
                     float kk = 3;
                     //cameraToStart = new Vector3(cameraToStart.X, 0, 0);
                     //Camera.CamTo = cameraToStart;
                     Vector3 v1 = cameraFromStart - cameraToStart;
-
+                    
                     var m1 = Matrix3.CreateFromAxisAngle(Vector3.Cross(v1, cameraUpStart), -(startPosY - pos.Y) / 180f / kk * (float)Math.PI);
                     //var m1 = Matrix3.CreateFromAxisAngle(Vector3.UnitX, -(startPosY - pos.Y) / 180f / kk * (float)Math.PI);
                     var m2 = Matrix3.CreateFromAxisAngle(cameraUpStart, -(startPosX - pos.X) / 180f / kk * (float)Math.PI);
@@ -48,7 +46,7 @@ namespace dxfViewer
 
                     //up1 *= m1;
                     //up1 *= m2;
-                    Camera.CamUp = up1;
+                    //Camera.CamUp = up1;
 
                     Camera.CamFrom = cameraToStart + v1;
                     var dx = startPosX - pos.X;
@@ -180,7 +178,7 @@ namespace dxfViewer
         }
 
         public bool SnapMode = false;
-        public bool SnapModePlane = false;
+        
         public virtual void Control_MouseDown(object sender, MouseEventArgs e)
         {
             Control.MakeCurrent();
@@ -197,36 +195,12 @@ namespace dxfViewer
 
                 var mr = new MouseRay(pos.X, pos.Y, Camera);
                 var d1 = Camera.CamFrom - Camera.CamTo;
+                
                 //var plane1 : forw
                 var crs1 = Vector3.Cross(cameraUpStart, d1);
                 var z1 = Vector3.UnitZ;
-                if (SnapModePlane)
-                {
-
-                    var inter = lineIntersection(Vector3.Zero, Vector3.UnitZ, Camera.CamFrom, Camera.CamTo - Camera.CamFrom);
-                    if (inter != null)
-                    {
-                        drag = true;
-                        //var shift = Camera.CamTo - inter.Value;
-                        var dl = Camera.DirLen;
-                        bool fixedLen = false;
-                        if (fixedLen)
-                        {
-                            var shift2 = Camera.CamFrom - Camera.CamTo;
-                            Camera.CamTo = inter.Value;
-                            Camera.CamFrom = Camera.CamTo + shift2;
-                            cameraToStart = Camera.CamTo;
-                            cameraFromStart = Camera.CamFrom;
-                        }
-                        else
-                        {
-                            Camera.CamTo = inter.Value;
-                            cameraToStart = Camera.CamTo;
-                        }
-
-                    }
-                }
-                else if (SnapMode)
+                
+                 if (SnapMode)
                 {
 
 

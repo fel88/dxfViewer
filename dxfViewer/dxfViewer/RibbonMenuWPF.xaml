@@ -43,6 +43,10 @@
                         KeyTip="F"
                         Label="Fit all"
                         SmallImageSource="Icons/magnifier.ico" />
+                    <RibbonButton
+                        Click="ResetCamera_click"
+                        KeyTip="F"
+                        Label="Reset camera" />
 
                 </RibbonGroup>
                 <RibbonGroup x:Name="Scene" Header="Scene">
@@ -59,7 +63,7 @@
                 </RibbonGroup>
 
 
-                <RibbonGroup x:Name="project" Header="Project">
+                <RibbonGroup x:Name="dxf" Header="Dxf">
                     <RibbonButton
                         Click="OpenProject_click"
                         KeyTip="B"
@@ -87,7 +91,11 @@
                 </RibbonGroup>
 
                 <RibbonGroup x:Name="settings" Header="Settings ">
-                    <RibbonButton Label="Settings" SmallImageSource="Icons/gear.png" />
+                    <RibbonButton Label="Settings" 
+                                  Click="RibbonButton_Click_2"
+                                  SmallImageSource="Icons/gear.png" />
+                    <RibbonButton Label="Background" Click="RibbonButton_Click_1" />
+
                 </RibbonGroup>
 
             </RibbonTab>

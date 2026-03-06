@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace dxfViewer
 {
-    public abstract class AbstractSceneObject : ISceneObject
+    public abstract class AbstractSceneObject :ISceneObject
     {
         
         public AbstractSceneObject()
@@ -39,6 +39,8 @@ namespace dxfViewer
 
             return new[] { this }.Union(Childs.SelectMany(z => z.GetAll(p))).ToArray();
         }
+
+        public abstract IEnumerable<Vector3d> GetPoints();
 
         public bool Visible { get; set; } = true;
         public bool Selected { get; set; }

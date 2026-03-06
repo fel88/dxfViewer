@@ -7,6 +7,7 @@ namespace dxfViewer
     {
         void Draw(GpuDrawingContext ctx);
         int Id { get; set; }
+        IEnumerable<Vector3d> GetPoints();
         ISceneObject Parent { get; set; }
         List<ISceneObject> Childs { get; }
         string Name { get; set; }

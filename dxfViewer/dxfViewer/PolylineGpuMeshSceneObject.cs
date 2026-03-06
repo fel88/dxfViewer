@@ -5,7 +5,7 @@ using System.Xml.Linq;
 
 namespace dxfViewer
 {
-    public class PolylineGpuMeshSceneObject : AbstractSceneObject
+    public class PolylineGpuMeshSceneObject : AbstractSceneObject, ISceneObject
     {
 
         public void RestoreXml(XElement elem)
@@ -29,7 +29,7 @@ namespace dxfViewer
             this.gpuObject = gpuObject;
         }
         public Vector3d[] BBox;
-        public IEnumerable<Vector3d> GetPoints()
+        public override IEnumerable<Vector3d> GetPoints()
         {
             var mtrx = Matrix;
 
@@ -38,7 +38,7 @@ namespace dxfViewer
 
 
 
-        
+
         public bool Fill { get; set; } = true;
 
 
@@ -80,7 +80,7 @@ namespace dxfViewer
 
 
             }
-           
+
             GL.PopMatrix();
         }
     }
