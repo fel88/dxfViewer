@@ -6,4 +6,8 @@ OpenGL based dxfViewer
 
 
 
+## References:
+* Original Triangle code by Jonathan Richard Shewchuk, http://www.cs.cmu.edu/~quake/triangle.html
+* Triangle.NET code by Christian Woltering, http://triangle.codeplex.com/
+  
 <sub>Some icons by [Yusuke Kamiyamane](http://p.yusukekamiyamane.com/). Licensed under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/)</sub>
