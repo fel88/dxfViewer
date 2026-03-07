@@ -29,11 +29,11 @@ namespace dxfViewer
             this.gpuObject = gpuObject;
         }
 
-        public override IEnumerable<Vector3d> GetPoints()
+        public override IEnumerable<Vector2d> GetPoints()
         {
             var mtrx = Matrix;
             if (BBox != null)
-                return BBox.Select(z => mtrx.ExtractTranslation() + z);
+                return BBox.Select(z => mtrx.ExtractTranslation().Xy + z);
 
             return [];
         }
@@ -42,7 +42,7 @@ namespace dxfViewer
 
 
         public bool Fill { get; set; } = true;
-
+        public Vector3d? Color { get; internal set; } = null;
 
         public OpenTK.Mathematics.Matrix4 ToMatrix4(Matrix4d matrix4d)
         {
@@ -71,6 +71,9 @@ namespace dxfViewer
 
             Matrix4d dd = Matrix;
             GL.MultMatrix(ref dd);
+            var temp = ctx.ModelColor;
+            if (Color != null)
+                ctx.ModelColor = System.Drawing.Color.FromArgb((int)Color.Value.X, (int)Color.Value.Y, (int)Color.Value.Z);
             ctx.SetModelShader();
             ctx.ModelShader.setMat4("model", ToMatrix4(dd));
             //ctx.ModelShader.setMat4("model", Matrix4.CreateTranslation((float)Offset.X, (float)Offset.Y, 0));
@@ -78,6 +81,8 @@ namespace dxfViewer
             gpuObject.Draw();
 
             GL.UseProgram(0);
+
+            ctx.ModelColor = temp;
             GL.Disable(EnableCap.Lighting);
 
             if (Fill)
@@ -89,18 +94,18 @@ namespace dxfViewer
             GL.PopMatrix();
         }
 
-        internal void CalcBbox(Vector3d[] arr1)
+        internal void CalcBbox(Vector2d[] arr1)
         {
             var minx = arr1.Min(z => z.X);
             var miny = arr1.Min(z => z.Y);
             var maxx = arr1.Max(z => z.X);
             var maxy = arr1.Max(z => z.Y);
-            BBox = new Vector3d[]
+            BBox = new Vector2d[]
             {
-                        new Vector3d (minx,miny,0),
-                        new Vector3d (minx,maxy,0),
-                        new Vector3d (maxx,maxy,0),
-                        new Vector3d (maxx,miny,0),
+                        new Vector2d (minx,miny),
+                        new Vector2d (minx,maxy),
+                        new Vector2d (maxx,maxy),
+                        new Vector2d (maxx,miny),
             };
         }
     }

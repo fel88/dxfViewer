@@ -138,6 +138,16 @@ namespace dxfViewer
         {
             Form.Settings();
         }
+
+        private void OpenDxf_click(object sender, RoutedEventArgs e)
+        {
+            Form.OpenDxf();
+        }
+
+        private void ImportDxf_click(object sender, RoutedEventArgs e)
+        {
+            Form.ImportDxf();
+        }
     }
 
 }

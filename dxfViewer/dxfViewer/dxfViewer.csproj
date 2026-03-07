@@ -70,6 +70,7 @@
 	  <None Remove="Icons\molecule.png" />
 	  <None Remove="Icons\picture.png" />
 	  <None Remove="Icons\plug-connect.png" />
+	  <None Remove="Icons\plus.png" />
 	  <None Remove="Icons\puzzle.png" />
 	  <None Remove="Icons\question.png" />
 	  <None Remove="Icons\ruler-triangle.png" />
@@ -150,6 +151,7 @@
 	  <Resource Include="Icons\molecule.png" />
 	  <Resource Include="Icons\picture.png" />
 	  <Resource Include="Icons\plug-connect.png" />
+	  <Resource Include="Icons\plus.png" />
 	  <Resource Include="Icons\puzzle.png" />
 	  <Resource Include="Icons\question.png" />
 	  <Resource Include="Icons\ruler-triangle.png" />

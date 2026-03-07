@@ -4,19 +4,19 @@ using System.Xml.Linq;
 
 namespace dxfViewer
 {
-    public abstract class AbstractSceneObject :ISceneObject
+    public abstract class AbstractSceneObject : ISceneObject
     {
-        
+
         public AbstractSceneObject()
         {
-            
+
         }
         public Vector2d Offset { get; set; }
         public bool Frozen { get; set; }
-        public Vector3d[] BBox { get; set; }
+        public Vector2d[] BBox { get; set; }
         public AbstractSceneObject(XElement item)
         {
-            
+
         }
 
         public string Name { get; set; }
@@ -41,7 +41,7 @@ namespace dxfViewer
             return new[] { this }.Union(Childs.SelectMany(z => z.GetAll(p))).ToArray();
         }
 
-        public abstract IEnumerable<Vector3d> GetPoints();
+        public abstract IEnumerable<Vector2d> GetPoints();
 
         public bool Visible { get; set; } = true;
         public bool Selected { get; set; }

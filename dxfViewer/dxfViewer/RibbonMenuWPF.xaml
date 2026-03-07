@@ -32,6 +32,20 @@
                 Header="Project"
                 KeyTip="H">
                 <!--  Home  group  -->
+                <RibbonGroup x:Name="dxf" Header="Dxf">
+                    <RibbonButton
+                        Click="ImportDxf_click"
+                        KeyTip="B"
+                        Label="Import"
+                        SmallImageSource="Icons/plus.png" />
+                    <RibbonButton
+                        Click="OpenDxf_click"
+                        KeyTip="B"
+                        Label="Open"
+                        SmallImageSource="Icons/folder-horizontal-open.png" />
+
+
+                </RibbonGroup>
                 <RibbonGroup x:Name="General" Header="General">
                     <RibbonButton
                         Click="Selection_click"
@@ -60,22 +74,15 @@
                         KeyTip="M"
                         Label="Centrify"
                         SmallImageSource="Icons/arrow-move.png" />
-                </RibbonGroup>
-
-
-                <RibbonGroup x:Name="dxf" Header="Dxf">
-                    <RibbonButton
-                        Click="OpenProject_click"
-                        KeyTip="B"
-                        Label="Open"
-                        SmallImageSource="Icons/folder-horizontal-open.png" />
-
                     <RibbonButton
                         Click="Clear_click"
                         KeyTip="S"
                         Label="Clear"
                         SmallImageSource="Icons/broom.png" />
                 </RibbonGroup>
+
+
+
 
 
 
@@ -91,10 +98,11 @@
                 </RibbonGroup>
 
                 <RibbonGroup x:Name="settings" Header="Settings ">
-                    <RibbonButton Label="Settings" 
-                                  Click="RibbonButton_Click_2"
-                                  SmallImageSource="Icons/gear.png" />
-                    <RibbonButton Label="Background" Click="RibbonButton_Click_1" />
+                    <RibbonButton
+                        Click="RibbonButton_Click_2"
+                        Label="Settings"
+                        SmallImageSource="Icons/gear.png" />
+                    <RibbonButton Click="RibbonButton_Click_1" Label="Background" />
 
                 </RibbonGroup>
 

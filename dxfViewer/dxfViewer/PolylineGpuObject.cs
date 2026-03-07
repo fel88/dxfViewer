@@ -10,16 +10,14 @@ namespace dxfViewer
 
         int VBO, VAO;
         int numPoints;
-        public PolylineGpuObject(Vector3d[] verts)
+        public PolylineGpuObject(Vector2d[] verts)
         {
             int idx = 0;
-            float[] vertices = new float[verts.Length * 3];
+            float[] vertices = new float[verts.Length * 2];
             for (int i = 0; i < verts.Length; i++)
             {
                 vertices[idx++] = (float)verts[i].X;
                 vertices[idx++] = (float)verts[i].Y;
-                vertices[idx++] = (float)verts[i].Z;
-
 
             }
 
@@ -32,7 +30,7 @@ namespace dxfViewer
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
 
             GL.BindVertexArray(VAO);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
         }
