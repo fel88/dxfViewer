@@ -1,6 +1,6 @@
 # dxfViewer
 
-OpenGL based dxfViewer
+OpenGL based dxf viewer
 
 <img width="600" height="810" alt="image" src="https://github.com/user-attachments/assets/3868a12d-8c9d-4d8b-8be3-c0f5c348f0cc" />
 
