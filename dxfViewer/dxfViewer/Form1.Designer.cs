@@ -48,7 +48,7 @@
             tableLayoutPanel1.RowCount = 2;
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 120F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.Size = new Size(1021, 778);
+            tableLayoutPanel1.Size = new Size(1021, 756);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // timer1
@@ -87,8 +87,8 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1021, 778);
-            Controls.Add(statusStrip1);
             Controls.Add(tableLayoutPanel1);
+            Controls.Add(statusStrip1);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "dxfViewer";
