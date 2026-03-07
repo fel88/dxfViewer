@@ -44,12 +44,24 @@ namespace dxfViewer
 
             glControl.MouseDown += GlControl_MouseDown;
             glControl.MouseUp += GlControl_MouseUp;
-
+            glControl.MouseMove += GlControl_MouseMove;
+            glControl.MouseWheel += GlControl_MouseWheel;
             tableLayoutPanel1.Controls.Add(glControl, 0, 1);
             glControl.Dock = DockStyle.Fill;
             mf = new MessageFilter();
             Application.AddMessageFilter(mf);
         }
+
+        private void GlControl_MouseWheel(object? sender, MouseEventArgs e)
+        {
+            dirty = true;
+        }
+
+        private void GlControl_MouseMove(object? sender, MouseEventArgs e)
+        {
+            dirty = true;
+        }
+
         private void GlControl_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Middle)
@@ -58,6 +70,7 @@ namespace dxfViewer
                 {
                     middleDrag = true;
                     //  startMeasurePick = pick;
+                    dirty = true;
                 }
             }
 
@@ -66,6 +79,7 @@ namespace dxfViewer
         private void GlControl_MouseUp(object sender, MouseEventArgs e)
         {
             middleDrag = false;
+            dirty = true;
             //CurrentTool.MouseUp(e);
         }
         bool middleDrag = false;
@@ -81,6 +95,7 @@ namespace dxfViewer
         bool first = true;
 
         bool darkMode = true;
+        bool dirty = true;
         void Redraw()
         {
 
@@ -184,6 +199,7 @@ namespace dxfViewer
 
             DrawTextOverlay();
             glControl.SwapBuffers();
+            dirty = false;
         }
         GpuDrawingContext gpuCtx = new GpuDrawingContext();
 
@@ -285,7 +301,10 @@ namespace dxfViewer
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            glControl.Invalidate();
+            if (dirty)
+            {
+                glControl.Invalidate();
+            }
         }
 
         internal void ResetCamera()
@@ -293,6 +312,7 @@ namespace dxfViewer
             camera1.CamTo = new Vector3(0, 0, 0);
             camera1.CamFrom = new Vector3(0, 0, 100);
             camera1.CamUp = new Vector3(0, 1, 0);
+            dirty = true;
         }
 
         internal async void OpenDxf()
@@ -302,6 +322,7 @@ namespace dxfViewer
                 return;
 
             Parts.Clear();
+            dirty = true;
             {
                 netDxf.DxfDocument doc = null;
                 await Task.Run(() =>
@@ -310,7 +331,7 @@ namespace dxfViewer
                     AddDxf(doc);
                 });
             }
-            GC.Collect();
+            GC.Collect(2);
             GC.WaitForPendingFinalizers();
         }
 
@@ -395,7 +416,7 @@ namespace dxfViewer
             }
 
             if (accum.Any())
-            {                
+            {
                 PolylineGpuObject g = Create(accum.ToArray());
                 PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) };
                 sceneObject.CalcBbox(accum.ToArray());
@@ -459,7 +480,7 @@ namespace dxfViewer
                 sceneObject.CalcBbox(vv.ToArray());
 
                 vv.Clear();
-                Parts.Add(sceneObject);
+                toAdd.Add(sceneObject);
             }
             sum /= cnt;
             foreach (var item in Parts)
@@ -475,12 +496,12 @@ namespace dxfViewer
                 if (accum.Count > 10000)
                 {
                     PolylineGpuObject g = Create(accum.ToArray());
-                    PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) ;
+                    PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
                     sceneObject.CalcBbox(accum.ToArray());
                     accum.Clear();
                     vv.Clear();
                     toAdd.Add(sceneObject);
-                }                
+                }
             }
             if (accum.Count > 0)
             {
@@ -492,6 +513,7 @@ namespace dxfViewer
                 toAdd.Add(sceneObject);
             }
             Parts.AddRange(toAdd);
+            dirty = true;
         }
 
         private Vector2d[] StripToLines(Vector2d[] arr1)
@@ -511,6 +533,7 @@ namespace dxfViewer
         internal void SwitchColorTheme()
         {
             darkMode = !darkMode;
+            dirty = true;
         }
 
         internal void Settings()
@@ -524,11 +547,13 @@ namespace dxfViewer
 
             drawAxes = d.GetBoolField("drawAxes");
             PolylinePrecisionDivider = d.GetNumericField("PolylinePrecisionDivider");
+            dirty = true;
         }
 
         internal void Clear()
         {
             Parts.Clear();
+            dirty = true;
         }
 
         public void FitToPoints(Vector2d[] pnts, Camera cam, float gap = 10)
@@ -572,8 +597,11 @@ namespace dxfViewer
         internal void FitAll()
         {
             var pnts = Parts.SelectMany(z => z.GetPoints()).ToArray();
-            if (pnts.Any())
-                FitToPoints(pnts, camera1);
+            if (!pnts.Any())
+                return;
+
+            FitToPoints(pnts, camera1);
+            dirty = true;
         }
 
         internal void Centrify()
@@ -603,7 +631,7 @@ namespace dxfViewer
 
                 // item.Offset = -new Vector2d(center0.X, center0.Y);
             }
-
+            dirty = true;
         }
 
         internal async void ImportDxf()
@@ -620,7 +648,7 @@ namespace dxfViewer
                     AddDxf(doc);
                 });
             }
-            GC.Collect();
+            GC.Collect(2);
             GC.WaitForPendingFinalizers();
         }
     }

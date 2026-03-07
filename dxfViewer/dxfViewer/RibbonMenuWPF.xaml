@@ -64,11 +64,11 @@
 
                 </RibbonGroup>
                 <RibbonGroup x:Name="Scene" Header="Scene">
-                    <RibbonButton
+                    <!--<RibbonButton
                         Click="Delete_click"
                         KeyTip="D"
                         Label="Delete"
-                        SmallImageSource="Icons/cross-button.ico" />
+                        SmallImageSource="Icons/cross-button.ico" />-->
                     <RibbonButton
                         Click="Move_click"
                         KeyTip="M"
@@ -88,14 +88,14 @@
 
 
 
-                <RibbonGroup x:Name="layers" Header="Layers">
+                <!--<RibbonGroup x:Name="layers" Header="Layers">
                     <RibbonButton
                         Click="ShowHideLayersPanel_click"
                         KeyTip="B"
                         Label="Show/hide panel"
                         SmallImageSource="Icons/layers-stack.png" />
 
-                </RibbonGroup>
+                </RibbonGroup>-->
 
                 <RibbonGroup x:Name="settings" Header="Settings ">
                     <RibbonButton
