@@ -1,3 +1,4 @@
+using netDxf.Collections;
 using netDxf.Entities;
 using OpenTK.GLControl;
 using OpenTK.Graphics.OpenGL;
@@ -51,6 +52,7 @@ namespace dxfViewer
             mf = new MessageFilter();
             Application.AddMessageFilter(mf);
         }
+        const int MinimalArcDivider = 10;
 
         private void GlControl_MouseWheel(object? sender, MouseEventArgs e)
         {
@@ -358,23 +360,8 @@ namespace dxfViewer
 
             }
             const int MinimalCircleDivider = 18;
-            foreach (var item in doc.Entities.Circles)
-            {
-                var len = Math.PI * 2 * item.Radius;
-                var qty = len / PolylinePrecisionDivider;
-                qty = qty < MinimalCircleDivider ? MinimalCircleDivider : qty;
-                var verts = item.ToPolyline2D((int)qty);
-                var list = verts.Vertexes.Select(z => new Vector2d(z.Position.X, z.Position.Y)).ToList();
-                list.Add(list[0]);
-                var arr1 = list.ToArray();
-                arr1 = StripToLines(arr1);
-                PolylineGpuObject g = Create(arr1);
-                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
-                sceneObject.CalcBbox(arr1);
 
-                vv.Clear();
-                toAdd.Add(sceneObject);
-            }
+          
             List<Vector2d> accum = new List<Vector2d>();
 
             foreach (var item in doc.Entities.Hatches)
@@ -407,6 +394,79 @@ namespace dxfViewer
                                 toAdd.Add(sceneObject);
                             }
                         }
+                        else if (d is HatchBoundaryPath.Line ll)
+                        {
+                            var verts = new netDxf.Vector2[] { ll.Start, ll.End };
+
+                            var arr1 = verts.Select(z => new Vector2d(z.X, z.Y)).ToArray();
+
+                            accum.AddRange(arr1);
+
+                            if (accum.Count > 10000)
+                            {
+                                PolylineGpuObject g = Create(accum.ToArray());
+                                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) };
+                                sceneObject.CalcBbox(accum.ToArray());
+                                accum.Clear();
+                                vv.Clear();
+                                toAdd.Add(sceneObject);
+                            }
+                        }
+                        else if (d is HatchBoundaryPath.Arc arc)
+                        {
+                            Arc arc1 = new Arc(arc.Center, arc.Radius, arc.StartAngle, arc.EndAngle);
+
+                            var sweep = arc.EndAngle - arc.StartAngle;
+                            if (sweep < 0)
+                                sweep += 360;
+                            var len = Math.PI * 2 * arc.Radius * (sweep / 360.0);
+                            var qty = len / PolylinePrecisionDivider;
+                            qty = qty < MinimalArcDivider ? MinimalArcDivider : qty;
+                            var pl0 = arc1.ToPolyline2D((int)qty);
+                            List<Vector2d> vvv = new List<Vector2d>();
+                            if ((Math.Abs(sweep) - 360.0) < 1e-6)
+                            {
+                                Circle circle = new Circle(arc.Center, arc.Radius);
+                                pl0 = circle.ToPolyline2D((int)qty);
+                                var verts = pl0.Vertexes;
+                                var list = verts.Select(z => new Vector2d(z.Position.X, z.Position.Y)).ToList();
+                                list.Add(list[0]);
+                                var arr1 = list.ToArray();
+                                arr1 = StripToLines(arr1);
+                                vvv = arr1.ToList();
+                            }
+                            else
+                            {
+                                var verts = pl0.Vertexes;
+                                var list = verts.Select(z => new Vector2d(z.Position.X, z.Position.Y)).ToList();
+                                if (pl0.IsClosed)
+                                {
+                                    list.Add(list[0]);
+                                }
+                                var arr1 = list.ToArray();
+                                arr1 = StripToLines(arr1);
+                                vvv = arr1.ToList();
+                            }
+
+
+
+                            accum.AddRange(vvv.ToArray());
+                            if (accum.Count > 10000)
+                            {
+                                var arr1 = accum.ToArray();
+                                PolylineGpuObject g = Create(arr1);
+                                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) }; 
+                                sceneObject.CalcBbox(arr1);
+
+                                accum.Clear();
+                                toAdd.Add(sceneObject);
+                            }
+
+                        }
+                        else
+                        {
+
+                        }
                     }
                     foreach (var d in gitem.Entities)
                     {
@@ -425,7 +485,23 @@ namespace dxfViewer
                 toAdd.Add(sceneObject);
             }
 
-            const int MinimalArcDivider = 10;
+            foreach (var item in doc.Entities.Circles)
+            {
+                var len = Math.PI * 2 * item.Radius;
+                var qty = len / PolylinePrecisionDivider;
+                qty = qty < MinimalCircleDivider ? MinimalCircleDivider : qty;
+                var verts = item.ToPolyline2D((int)qty);
+                var list = verts.Vertexes.Select(z => new Vector2d(z.Position.X, z.Position.Y)).ToList();
+                list.Add(list[0]);
+                var arr1 = list.ToArray();
+                arr1 = StripToLines(arr1);
+                PolylineGpuObject g = Create(arr1);
+                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+                sceneObject.CalcBbox(arr1);
+
+                vv.Clear();
+                toAdd.Add(sceneObject);
+            }
             foreach (var item in doc.Entities.Arcs)
             {
                 var sweep = item.EndAngle - item.StartAngle;
@@ -487,6 +563,27 @@ namespace dxfViewer
             {
                 //item.Matrix.Items.Add(new TranslateTransformChainItem() { Vector = -sum });
             }
+            foreach (var item in doc.Entities.Polylines2D)
+            {
+                var verts = item.Vertexes.ToArray();
+
+                var arr1 = verts.Select(z => new Vector2d(z.Position.X, z.Position.Y)).ToList();
+                if (item.IsClosed)
+                {
+                    arr1.Add(arr1[0]);
+                }
+                arr1 = StripToLines(arr1).ToList();
+                accum.AddRange(arr1);
+                if (accum.Count > 10000)
+                {
+                    PolylineGpuObject g = Create(accum.ToArray());
+                    PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g);
+                    sceneObject.CalcBbox(accum.ToArray());
+                    accum.Clear();
+                    vv.Clear();
+                    toAdd.Add(sceneObject);
+                }
+            }
             foreach (var item in doc.Entities.Lines)
             {
                 var verts = new netDxf.Vector3[] { item.StartPoint, item.EndPoint };
@@ -516,11 +613,11 @@ namespace dxfViewer
             dirty = true;
         }
 
-        private Vector2d[] StripToLines(Vector2d[] arr1)
+        private Vector2d[] StripToLines(IReadOnlyList<Vector2d> arr1)
         {
             List<Vector2d> ret = new List<Vector2d>();
             ret.Add(arr1[0]);
-            for (int i = 1; i < arr1.Length - 1; i++)
+            for (int i = 1; i < arr1.Count - 1; i++)
             {
                 ret.Add(arr1[i]);
                 ret.Add(arr1[i]);
