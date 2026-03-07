@@ -18,13 +18,13 @@ namespace dxfViewer
 
         }
 
-        protected PolylineGpuObject gpuObject;
+        protected IGpuObject gpuObject;
         public PolylineGpuMeshSceneObject()
         {
 
         }
 
-        public PolylineGpuMeshSceneObject(PolylineGpuObject gpuObject)
+        public PolylineGpuMeshSceneObject(IGpuObject gpuObject)
         {
             this.gpuObject = gpuObject;
         }

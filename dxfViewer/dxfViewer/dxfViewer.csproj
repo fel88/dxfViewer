@@ -102,6 +102,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Triangulate\Triangulate.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Resource Include="Icons\abacus.png" />
 	  <Resource Include="Icons\anchor.png" />
 	  <Resource Include="Icons\application-tile.png" />

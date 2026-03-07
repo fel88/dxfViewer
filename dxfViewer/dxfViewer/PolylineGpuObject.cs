@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 
 namespace dxfViewer
 {
-    public class PolylineGpuObject : IDisposable
+    public class PolylineGpuObject : IDisposable, IGpuObject
     {
         bool deleted = false;
 

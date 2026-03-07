@@ -3,6 +3,7 @@ using netDxf.Entities;
 using OpenTK.GLControl;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Windows.Forms;
@@ -51,6 +52,8 @@ namespace dxfViewer
             glControl.Dock = DockStyle.Fill;
             mf = new MessageFilter();
             Application.AddMessageFilter(mf);
+
+
         }
         const int MinimalArcDivider = 10;
 
@@ -88,6 +91,7 @@ namespace dxfViewer
         //IntersectInfo startMeasurePick = null;
         GLControl glControl;
         bool drawAxes = true;
+        bool FillHatchesOnLoad = false;
         Vector3d lastHovered;
         object hovered;
         Matrix4d hoveredMatrix;
@@ -303,6 +307,8 @@ namespace dxfViewer
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+
+            toolStripProgressBar1.Value = progressValue;
             if (dirty)
             {
                 glControl.Invalidate();
@@ -325,14 +331,7 @@ namespace dxfViewer
 
             Parts.Clear();
             dirty = true;
-            {
-                netDxf.DxfDocument doc = null;
-                await Task.Run(() =>
-                {
-                    doc = netDxf.DxfDocument.Load(ofd.FileName);
-                    AddDxf(doc);
-                });
-            }
+            LoadDxf(ofd.FileName);
             GC.Collect(2);
             GC.WaitForPendingFinalizers();
         }
@@ -346,14 +345,69 @@ namespace dxfViewer
             });
             return g;
         }
+        public static double RemoveThreshold = 10e-5;
+        public static double ClosingThreshold = 10e-2;
+
+        public static LocalContour[] ConnectElements(Vector2d[][] elems)
+        {
+            List<LocalContour> ret = new List<LocalContour>();
+
+            List<Vector2d> pp = new List<Vector2d>();
+            List<Vector2d[]> last = new List<Vector2d[]>();
+            last.AddRange(elems);
+
+            while (last.Any())
+            {
+                if (pp.Count == 0)
+                {
+                    pp.AddRange(last.First());
+
+                    last.RemoveAt(0);
+                }
+                else
+                {
+                    var ll = pp.Last();
+                    var f1 = last.OrderBy(z => Math.Min((z[0] - ll).Length, (z[1] - ll).Length)).First();
+
+                    var dist = Math.Min((f1[0] - ll).Length, (f1[1] - ll).Length);
+                    if (dist > ClosingThreshold)
+                    {
+                        ret.Add(new LocalContour() { Points = pp.ToList() });
+                        pp.Clear();
+
+                        continue;
+                    }
+
+                    last.Remove(f1);
+                    if ((f1[0] - ll).Length < (f1[1] - ll).Length)
+                    {
+                        pp.AddRange(f1.Skip(1));
+                        //pp.Add(f1.End);
+                    }
+                    else
+                    {
+                        f1 = f1.Reverse().ToArray();
+                        pp.AddRange(f1.Skip(1));
+                        //pp.Add(f1.Start);
+                    }
+                }
+            }
+            if (pp.Any())
+            {
+                ret.Add(new LocalContour() { Points = pp.ToList() });
+            }
+            return ret.ToArray();
+        }
 
         void AddDxf(netDxf.DxfDocument doc)
         {
             List<ISceneObject> toAdd = new List<ISceneObject>();
             int cnt = 0;
             List<Vector2d> vv = new List<Vector2d>();
-            Vector2d sum = new Vector2d();
+
             //Vector3d? first = null;
+            var total = doc.Entities.All.Count();
+            UpdateProgressBar(0, total);
             foreach (var item in doc.Entities.All)
             {
                 var nm = item.GetType().Name;
@@ -361,59 +415,50 @@ namespace dxfViewer
             }
             const int MinimalCircleDivider = 18;
 
-          
+
             List<Vector2d> accum = new List<Vector2d>();
 
             foreach (var item in doc.Entities.Hatches)
             {
+
+                progressValue = cnt++;
+
                 foreach (var gitem in item.BoundaryPaths)
                 {
 
+                    List<Vector2d> segments = new List<Vector2d>();
                     foreach (var d in gitem.Edges)
                     {
-
                         if (d is HatchBoundaryPath.Polyline pl)
                         {
-
+                            List<Vector2d> accum0 = new List<Vector2d>();
                             var arr1 = pl.Vertexes.Select(z => new Vector2d(z.X, z.Y)).ToArray();
                             arr1 = StripToLines(arr1);
-                            accum.AddRange(arr1);
+                            accum0.AddRange(arr1);
                             if (pl.IsClosed)
                             {
-                                accum.Add(arr1[^1]);
-                                accum.Add(arr1[0]);
+                                accum0.Add(arr1[^1]);
+                                accum0.Add(arr1[0]);
                             }
+                            segments.AddRange(accum0);
 
-                            if (accum.Count > 10000)
-                            {
-                                PolylineGpuObject g = Create(accum.ToArray());
-                                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) };
-                                sceneObject.CalcBbox(accum.ToArray());
-                                accum.Clear();
-                                vv.Clear();
-                                toAdd.Add(sceneObject);
-                            }
                         }
                         else if (d is HatchBoundaryPath.Line ll)
                         {
+                            List<Vector2d> accum0 = new List<Vector2d>();
+
                             var verts = new netDxf.Vector2[] { ll.Start, ll.End };
 
                             var arr1 = verts.Select(z => new Vector2d(z.X, z.Y)).ToArray();
 
-                            accum.AddRange(arr1);
+                            accum0.AddRange(arr1);
+                            segments.AddRange(accum0);
 
-                            if (accum.Count > 10000)
-                            {
-                                PolylineGpuObject g = Create(accum.ToArray());
-                                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) };
-                                sceneObject.CalcBbox(accum.ToArray());
-                                accum.Clear();
-                                vv.Clear();
-                                toAdd.Add(sceneObject);
-                            }
                         }
                         else if (d is HatchBoundaryPath.Arc arc)
                         {
+                            List<Vector2d> accum0 = new List<Vector2d>();
+
                             Arc arc1 = new Arc(arc.Center, arc.Radius, arc.StartAngle, arc.EndAngle);
 
                             var sweep = arc.EndAngle - arc.StartAngle;
@@ -450,17 +495,19 @@ namespace dxfViewer
 
 
 
-                            accum.AddRange(vvv.ToArray());
-                            if (accum.Count > 10000)
-                            {
-                                var arr1 = accum.ToArray();
-                                PolylineGpuObject g = Create(arr1);
-                                PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) }; 
-                                sceneObject.CalcBbox(arr1);
+                            accum0.AddRange(vvv.ToArray());
+                            segments.AddRange(accum0);
 
-                                accum.Clear();
-                                toAdd.Add(sceneObject);
-                            }
+                            //if (accum.Count > 10000)
+                            //{
+                            //    var arr1 = accum.ToArray();
+                            //    PolylineGpuObject g = Create(arr1);
+                            //    PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) }; 
+                            //    sceneObject.CalcBbox(arr1);
+
+                            //    accum.Clear();
+                            //    toAdd.Add(sceneObject);
+                            //}
 
                         }
                         else
@@ -471,6 +518,46 @@ namespace dxfViewer
                     foreach (var d in gitem.Entities)
                     {
 
+                    }
+                    if (FillHatchesOnLoad)
+                    {
+                        //2. try connect segments to closed loop
+                        var segments0 = new List<Vector2d[]>();
+                        for (int i = 1; i < segments.Count; i += 2)
+                        {
+                            segments0.Add([segments[i - 1], segments[i]]);
+                        }
+                        var contours = ConnectElements(segments0.ToArray());
+                        if (contours.Length == 1 && contours[0].IsClosed())
+                        {
+                            // triagnulate of success
+                            var tr = TrianglesGpuObject.TriangulateWithHoles([contours[0].Points.ToArray()], []);
+                            PolylineGpuMeshSceneObject s = null;
+                            glControl.Invoke(() =>
+                            {
+                                s = new PolylineGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray())) { Color = new Vector3d(255, 128, 128) };
+                            });
+                            toAdd.Add(s);
+                        }
+                        else
+                        {
+                            accum.AddRange(segments);
+
+                        }
+                    }
+                    else
+                    {
+                        accum.AddRange(segments);
+
+                    }
+                    if (accum.Count > 10000)
+                    {
+                        PolylineGpuObject g = Create(accum.ToArray());
+                        PolylineGpuMeshSceneObject sceneObject = new PolylineGpuMeshSceneObject(g) { Color = new Vector3d(255, 0, 0) };
+                        sceneObject.CalcBbox(accum.ToArray());
+                        accum.Clear();
+                        vv.Clear();
+                        toAdd.Add(sceneObject);
                     }
                 }
             }
@@ -487,6 +574,9 @@ namespace dxfViewer
 
             foreach (var item in doc.Entities.Circles)
             {
+                progressValue = cnt++;
+
+
                 var len = Math.PI * 2 * item.Radius;
                 var qty = len / PolylinePrecisionDivider;
                 qty = qty < MinimalCircleDivider ? MinimalCircleDivider : qty;
@@ -511,7 +601,8 @@ namespace dxfViewer
                 var qty = len / PolylinePrecisionDivider;
                 qty = qty < MinimalArcDivider ? MinimalArcDivider : qty;
                 var pl = item.ToPolyline2D((int)qty);
-                cnt++;
+                progressValue = cnt++;
+
                 //if (cnt > 100000)
                 //  break;
 
@@ -527,8 +618,7 @@ namespace dxfViewer
                 {
                     netDxf.Entities.Polyline2DVertex vitem = verts[i];
                     pos = new Vector2d(vitem.Position.X, vitem.Position.Y);
-                    // pos -= first.Value;
-                    sum += pos;
+
 
                     vvv.Add(pos);
                     vvv.Add(pos);
@@ -558,13 +648,11 @@ namespace dxfViewer
                 vv.Clear();
                 toAdd.Add(sceneObject);
             }
-            sum /= cnt;
-            foreach (var item in Parts)
-            {
-                //item.Matrix.Items.Add(new TranslateTransformChainItem() { Vector = -sum });
-            }
+
             foreach (var item in doc.Entities.Polylines2D)
             {
+                progressValue = cnt++;
+
                 var verts = item.Vertexes.ToArray();
 
                 var arr1 = verts.Select(z => new Vector2d(z.Position.X, z.Position.Y)).ToList();
@@ -586,6 +674,8 @@ namespace dxfViewer
             }
             foreach (var item in doc.Entities.Lines)
             {
+                progressValue = cnt++;
+
                 var verts = new netDxf.Vector3[] { item.StartPoint, item.EndPoint };
 
                 var arr1 = verts.Select(z => new Vector2d(z.X, z.Y)).ToArray();
@@ -613,6 +703,16 @@ namespace dxfViewer
             dirty = true;
         }
 
+        int progressValue = 0;
+        private void UpdateProgressBar(int cnt, int total)
+        {
+            statusStrip1.Invoke(() =>
+            {
+                toolStripProgressBar1.Maximum = total;
+                toolStripProgressBar1.Value = cnt;
+            });
+        }
+
         private Vector2d[] StripToLines(IReadOnlyList<Vector2d> arr1)
         {
             List<Vector2d> ret = new List<Vector2d>();
@@ -637,12 +737,14 @@ namespace dxfViewer
         {
             var d = AutoDialog.DialogHelpers.StartDialog();
             d.AddBoolField("drawAxes", "Draw axes", drawAxes);
+            d.AddBoolField("FillHatchesOnLoad", "FillHatchesOnLoad", FillHatchesOnLoad);
             d.AddNumericField("PolylinePrecisionDivider", "PolylinePrecisionDivider", PolylinePrecisionDivider);
 
             if (!d.ShowDialog())
                 return;
 
             drawAxes = d.GetBoolField("drawAxes");
+            FillHatchesOnLoad = d.GetBoolField("FillHatchesOnLoad");
             PolylinePrecisionDivider = d.GetNumericField("PolylinePrecisionDivider");
             dirty = true;
         }
@@ -737,16 +839,40 @@ namespace dxfViewer
             if (ofd.ShowDialog() != DialogResult.OK)
                 return;
 
-            {
-                netDxf.DxfDocument doc = null;
-                await Task.Run(() =>
-                {
-                    doc = netDxf.DxfDocument.Load(ofd.FileName);
-                    AddDxf(doc);
-                });
-            }
+            dirty = true;
+            await LoadDxf(ofd.FileName);
             GC.Collect(2);
             GC.WaitForPendingFinalizers();
+        }
+
+        private async Task LoadDxf(string path)
+        {
+            netDxf.DxfDocument doc = null;
+            toolStripStatusLabel1.Text = $"Loading : {path}";
+            progressValue = 0;
+            toolStripProgressBar1.Maximum = 100;
+            toolStripProgressBar1.Value = 0;
+
+            toolStripProgressBar1.Visible = true;
+            Stopwatch sw = Stopwatch.StartNew();
+            await Task.Run(() =>
+            {
+
+                doc = netDxf.DxfDocument.Load(path);
+                AddDxf(doc);
+
+
+            });
+            sw.Stop();
+            double ms = sw.ElapsedMilliseconds;
+            toolStripProgressBar1.Visible = false;
+            string end = "ms";
+            if (ms > 1000)
+            {
+                ms /= 1000.0;
+                end = "s";
+            }
+            toolStripStatusLabel1.Text = $"Done loading : {path}, loading time: {Math.Round(ms, 2)}{end}";
         }
     }
 }
