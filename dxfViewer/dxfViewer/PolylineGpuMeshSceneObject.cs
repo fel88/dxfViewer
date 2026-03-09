@@ -71,23 +71,23 @@ namespace dxfViewer
 
             Matrix4d dd = Matrix;
             GL.MultMatrix(ref dd);
-            
+
             ctx.SetModelShader();
             //ctx.ModelShader.use();
 
             if (Color != null)
             {
-                ctx.CurrentShader.SetColor(Color.Value.ToVector3()/255);
+                ctx.CurrentShader.SetColor(Color.Value.ToVector3() / 255);
             }
-                        
+
             ctx.ModelShader.setMat4("model", ToMatrix4(dd));
             //ctx.ModelShader.setMat4("model", Matrix4.CreateTranslation((float)Offset.X, (float)Offset.Y, 0));
 
             gpuObject.Draw();
 
-            ctx.ResetShader();            
+            ctx.ResetShader();
 
-            
+
             GL.PopMatrix();
         }
 

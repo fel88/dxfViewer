@@ -164,30 +164,6 @@ namespace dxfViewer
 
             camera1.Setup(glControl.Size);
 
-            if (drawAxes)
-            {
-                GL.PushMatrix();
-
-                GL.LineWidth(2);
-                GL.Color3(Color.Red);
-                GL.Begin(PrimitiveType.Lines);
-                GL.Vertex3(0, 0, 0);
-                GL.Vertex3(100, 0, 0);
-                GL.End();
-
-                GL.Color3(Color.Green);
-                GL.Begin(PrimitiveType.Lines);
-                GL.Vertex3(0, 0, 0);
-                GL.Vertex3(0, 100, 0);
-                GL.End();
-
-                GL.Color3(Color.Blue);
-                GL.Begin(PrimitiveType.Lines);
-                GL.Vertex3(0, 0, 0);
-                GL.Vertex3(0, 0, 100);
-                GL.End();
-                GL.PopMatrix();
-            }
             GL.LineWidth(1);
 
             GL.Color3(Color.Blue);
@@ -203,18 +179,26 @@ namespace dxfViewer
             {
                 parts = Parts.ToArray();
             }
+            GL.Disable(EnableCap.DepthTest);
+            if (DrawHatches)
+                foreach (var item in parts.OfType<HatchGpuMeshSceneObject>())
+                {
+                    if (!item.Visible)
+                        continue;
 
-            foreach (var item in parts)
+                    item.Draw(gpuCtx);
+                }
+
+            foreach (var item in parts.OfType<PolylineGpuMeshSceneObject>())
             {
                 if (!item.Visible)
-                    continue;
-
-                if (item is HatchGpuMeshSceneObject && !DrawHatches)
                     continue;
 
                 item.Draw(gpuCtx);
             }
 
+            if (drawAxes)
+                DrawAxes();
 
             GL.Disable(EnableCap.Lighting);
 
@@ -223,6 +207,34 @@ namespace dxfViewer
             glControl.SwapBuffers();
             dirty = false;
         }
+
+        private void DrawAxes()
+        {
+
+            GL.PushMatrix();
+
+            GL.LineWidth(2);
+            GL.Color3(Color.Red);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0, 0, 0);
+            GL.Vertex3(100, 0, 0);
+            GL.End();
+
+            GL.Color3(Color.Green);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0, 0, 0);
+            GL.Vertex3(0, 100, 0);
+            GL.End();
+
+            GL.Color3(Color.Blue);
+            GL.Begin(PrimitiveType.Lines);
+            GL.Vertex3(0, 0, 0);
+            GL.Vertex3(0, 0, 100);
+            GL.End();
+            GL.PopMatrix();
+
+        }
+
         GpuDrawingContext gpuCtx = new GpuDrawingContext();
 
         public List<ISceneObject> Parts = new List<ISceneObject>();
@@ -313,9 +325,9 @@ namespace dxfViewer
             var cam = gpuCtx.Camera;
             var p = MouseRay.UnProject(new Vector3(pos.X, pos.Y, 0), cam.ProjectionMatrix, cam.ViewMatrix, new Size(camera1.viewport[2], camera1.viewport[3]));
 
-
-            textRenderer.RenderText(gpuCtx, $"X: {Math.Round(p.X, 2)}", 0, glControl.Height - textRenderer.FontSize, 1.0f, new Vector3(0.5f, 0.8f, 0.2f));
-            textRenderer.RenderText(gpuCtx, $"Y: {Math.Round(p.Y, 2)}", 0, glControl.Height - textRenderer.FontSize*2, 1.0f, new Vector3(0.5f, 0.8f, 0.2f));
+            var textColor = darkMode ? new Vector3(0.5f, 0.8f, 0.2f) : new Vector3(0, 0, 0);
+            textRenderer.RenderText(gpuCtx, $"X: {Math.Round(p.X, 2)}", 0, glControl.Height - textRenderer.FontSize, 1.0f, textColor);
+            textRenderer.RenderText(gpuCtx, $"Y: {Math.Round(p.Y, 2)}", 0, glControl.Height - textRenderer.FontSize * 2, 1.0f, textColor);
             //textRenderer.RenderText("(C) LearnOpenGL.com", 10.0f, glControl.Height - 30, 0.5f, new Vector3(0.3f, 0.7f, 0.9f));
             if (hovered != null)
                 textRenderer.RenderText(gpuCtx, "test", 10.0f, glControl.Height - 30, 0.5f, new Vector3(0.3f, 0.7f, 0.9f));
@@ -556,35 +568,44 @@ namespace dxfViewer
                             segments0.Add([segments[i - 1], segments[i]]);
                         }
                         var contours = ConnectElements(segments0.ToArray());
-                        if (contours.Length == 1 && contours[0].IsClosed())
+                        var closed = contours.Where(z => z.IsClosed()).ToArray();
+                        //var unclosed = contours.Where(z => !z.IsClosed()).ToArray();
+
+                        var roots = GetRoots(closed);
+                        foreach (var root in roots)
                         {
-                            // triagnulate of success
-                            var tr = TrianglesGpuObject.TriangulateWithHoles([contours[0].Points.ToArray()], []);
-                            HatchGpuMeshSceneObject s = null;
-                            glControl.Invoke(() =>
+                            try
                             {
-                                s = new HatchGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray()))
+                                // triagnulate of success
+                                var tr = TrianglesGpuObject.TriangulateWithHoles([root.Points.ToArray()], root.Childrens.Select(z => z.Points.ToArray()).ToArray());
+                                HatchGpuMeshSceneObject s = null;
+                                glControl.Invoke(() =>
                                 {
+                                    s = new HatchGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray()))
+                                    {
 
-                                    FillColor = new Vector3d(255, 128, 128),
-                                    Color = new Vector3d(255, 0, 0)
+                                        FillColor = new Vector3d(255, 128, 128),
+                                        Color = new Vector3d(255, 0, 0)
 
-                                };
-                            });
-                            s.CalcBbox(segments.ToArray());
-                            toAdd.Add(s);
+                                    };
+                                });
+                                s.CalcBbox(segments.ToArray());
+                                toAdd.Add(s);
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
                         }
-                        else
-                        {
-                            accum.AddRange(segments);
 
-                        }
-                    }
-                    else
-                    {
-                        accum.AddRange(segments);
+
+
 
                     }
+
+                    accum.AddRange(segments);
+
+
                     if (accum.Count > 10000)
                     {
                         PolylineGpuObject g = Create(accum.ToArray());
@@ -736,6 +757,47 @@ namespace dxfViewer
             }
             Parts.AddRange(toAdd);
             dirty = true;
+        }
+        public static bool pnpoly(Vector2d[] verts, double testx, double testy)
+        {
+            int nvert = verts.Length;
+            int i, j;
+            bool c = false;
+            for (i = 0, j = nvert - 1; i < nvert; j = i++)
+            {
+                if (((verts[i].Y > testy) != (verts[j].Y > testy)) &&
+                    (testx < (verts[j].X - verts[i].X) * (testy - verts[i].Y) / (verts[j].Y - verts[i].Y) + verts[i].X))
+                    c = !c;
+            }
+            return c;
+        }
+
+        private LocalContour[] GetRoots(LocalContour[] contours)
+        {
+            for (int i = 0; i < contours.Length; i++)
+            {
+                for (int j = 0; j < contours.Length; j++)
+                {
+                    if (i != j)
+                    {
+                        var d2 = contours[i];
+                        var d3 = contours[j];
+                        var f0 = d3.Points[0];
+
+                        if (pnpoly(d2.Points.ToArray(), f0.X, f0.Y))
+                        {
+                            d3.Parent = d2;
+                            if (!d2.Childrens.Contains(d3))
+                            {
+                                d2.Childrens.Add(d3);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var tops = contours.Where(z => z.Parent == null).ToArray();
+            return tops.ToArray();
         }
 
         int progressValue = 0;
