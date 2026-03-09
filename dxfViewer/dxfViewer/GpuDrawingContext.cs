@@ -5,7 +5,13 @@ namespace dxfViewer
 {
     public class GpuDrawingContext
     {
+        public GpuDrawingContext()
+        {
+
+        }
         public Camera Camera;
+
+        public Control Control;
 
         public Color ModelColor = Color.FromArgb(255, 128, 64);
         public Color HatchColor = Color.FromArgb(255, 0, 0);

@@ -106,12 +106,12 @@ namespace dxfViewer
         bool dirty = true;
         void Redraw()
         {
-           
+
             foreach (var p in Parts.OfType<HatchGpuMeshSceneObject>())
             {
                 p.Fill = SolidHatchFilling;
             }
-            
+
             //gpuCtx.CurrentHatchColor = SolidHatchFilling ? gpuCtx.ModelColor : gpuCtx.HatchColor;
             gpuCtx.HatchShader.use();
             gpuCtx.HatchShader.setVec3("bgColor", darkMode ? new Vector3(0, 0, 0) : new Vector3(1, 1, 1));
@@ -240,12 +240,13 @@ namespace dxfViewer
                 camera1 = new Camera() { IsOrtho = true, CamTo = new Vector3(0, 0, 0), CamFrom = new Vector3(0, 0, 100), CamUp = new Vector3(0, 1, 0) };
                 gpuCtx = new GpuDrawingContext()
                 {
+                    Control = glControl,
                     Camera = camera1,
                     ModelShader = new DefaultModelShader(),
                     HatchShader = new HatchShader(),
                     TextRenderer = textRenderer
                 };
-                
+
 
                 ViewManager = new DefaultCameraViewManager();
                 ViewManager.Attach(evwrapper, camera1);
@@ -305,10 +306,19 @@ namespace dxfViewer
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.Disable(EnableCap.DepthTest);
 
-            //textRenderer.RenderText("This is sample text", 25.0f, 25.0f, 1.0f, new Vector3(0.5f, 0.8f, 0.2f));
+            var pos = glControl.PointToClient(Cursor.Position);
+            var dx = gpuCtx.Camera.OrthoWidth;
+            var zoom = glControl.Width / gpuCtx.Camera.OrthoWidth;
+
+            var cam = gpuCtx.Camera;
+            var p = MouseRay.UnProject(new Vector3(pos.X, pos.Y, 0), cam.ProjectionMatrix, cam.ViewMatrix, new Size(camera1.viewport[2], camera1.viewport[3]));
+
+
+            textRenderer.RenderText(gpuCtx, $"X: {Math.Round(p.X, 2)}", 0, glControl.Height - textRenderer.FontSize, 1.0f, new Vector3(0.5f, 0.8f, 0.2f));
+            textRenderer.RenderText(gpuCtx, $"Y: {Math.Round(p.Y, 2)}", 0, glControl.Height - textRenderer.FontSize*2, 1.0f, new Vector3(0.5f, 0.8f, 0.2f));
             //textRenderer.RenderText("(C) LearnOpenGL.com", 10.0f, glControl.Height - 30, 0.5f, new Vector3(0.3f, 0.7f, 0.9f));
             if (hovered != null)
-                textRenderer.RenderText("test", 10.0f, glControl.Height - 30, 0.5f, new Vector3(0.3f, 0.7f, 0.9f));
+                textRenderer.RenderText(gpuCtx, "test", 10.0f, glControl.Height - 30, 0.5f, new Vector3(0.3f, 0.7f, 0.9f));
 
             /*var pos = glControl.PointToClient(Cursor.Position);
             hoverText.Scale = 0.4f;
@@ -553,11 +563,12 @@ namespace dxfViewer
                             HatchGpuMeshSceneObject s = null;
                             glControl.Invoke(() =>
                             {
-                                s = new HatchGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray())) { 
-                                    
+                                s = new HatchGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray()))
+                                {
+
                                     FillColor = new Vector3d(255, 128, 128),
-                                    Color = new Vector3d(255, 0, 0) 
-                                
+                                    Color = new Vector3d(255, 0, 0)
+
                                 };
                             });
                             s.CalcBbox(segments.ToArray());
@@ -773,7 +784,7 @@ namespace dxfViewer
             drawAxes = d.GetBoolField("drawAxes");
             FillHatchesOnLoad = d.GetBoolField("FillHatchesOnLoad");
             SolidHatchFilling = d.GetOptionsFieldIdx("HatchFillType") == 0;
-            
+
             PolylinePrecisionDivider = d.GetNumericField("PolylinePrecisionDivider");
             dirty = true;
         }

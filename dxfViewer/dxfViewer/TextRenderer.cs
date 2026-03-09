@@ -1,8 +1,10 @@
+using OpenTK.GLControl;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using SharpFont;
 using System.IO;
 using System.Reflection;
+using System.Windows.Media.Media3D;
 
 namespace dxfViewer
 {
@@ -54,6 +56,7 @@ namespace dxfViewer
                 return ms.ToArray();
             }
         }
+        public int FontSize = 20;
         private void InitFonts()
         {
             // FreeType
@@ -72,7 +75,7 @@ namespace dxfViewer
 
             // load font as face
             Face face = new Face(ft, fontBytes, 0);
-            face.SetPixelSizes(0, 48);
+            face.SetPixelSizes(0, (uint)FontSize);
             // set size to load glyphs as
             //FT_Set_Pixel_Sizes(face, 0, 48);
 
@@ -154,12 +157,16 @@ namespace dxfViewer
 
         // render line of text
         // -------------------
-        public void RenderText(string text, float x, float y, float scale, Vector3 color)
-        {
+        public void RenderText(GpuDrawingContext ctx, string text, float x, float y, float scale, Vector3 color)
+        {            
             // activate corresponding render state	
             shader.use();
             //glUniform3f(glGetUniformLocation(shader.ID, "textColor"), color.x, color.y, color.z);
             shader.setVec3("textColor", color);
+                        
+            Matrix4 projection = Matrix4.CreateOrthographicOffCenter(0, ctx.Control.Width, 0, ctx.Control.Height, 0, 1);            
+
+            shader.setMat4("projection", projection);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindVertexArray(VAO);
 
