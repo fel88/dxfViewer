@@ -91,7 +91,9 @@ namespace dxfViewer
         //IntersectInfo startMeasurePick = null;
         GLControl glControl;
         bool drawAxes = true;
-        bool FillHatchesOnLoad = false;
+        bool DrawHatches = true;
+        bool FillHatchesOnLoad = true;
+        bool SolidHatchFilling = false;
         Vector3d lastHovered;
         object hovered;
         Matrix4d hoveredMatrix;
@@ -104,7 +106,16 @@ namespace dxfViewer
         bool dirty = true;
         void Redraw()
         {
-
+           
+            foreach (var p in Parts.OfType<HatchGpuMeshSceneObject>())
+            {
+                p.Fill = SolidHatchFilling;
+            }
+            
+            //gpuCtx.CurrentHatchColor = SolidHatchFilling ? gpuCtx.ModelColor : gpuCtx.HatchColor;
+            gpuCtx.HatchShader.use();
+            gpuCtx.HatchShader.setVec3("bgColor", darkMode ? new Vector3(0, 0, 0) : new Vector3(1, 1, 1));
+            gpuCtx.ResetShader();
             ViewManager.Update();
 
 
@@ -183,7 +194,9 @@ namespace dxfViewer
             GL.Disable(EnableCap.Lighting);
             //GL.Enable(EnableCap.Light0);
 
-            GL.ShadeModel(ShadingModel.Smooth);
+            //GL.ShadeModel(ShadingModel.Smooth);
+            //gpuCtx.SetModelShader();
+            //gpuCtx.SetHatchShader();
 
             ISceneObject[] parts = null;
             lock (Parts)
@@ -194,6 +207,9 @@ namespace dxfViewer
             foreach (var item in parts)
             {
                 if (!item.Visible)
+                    continue;
+
+                if (item is HatchGpuMeshSceneObject && !DrawHatches)
                     continue;
 
                 item.Draw(gpuCtx);
@@ -226,8 +242,10 @@ namespace dxfViewer
                 {
                     Camera = camera1,
                     ModelShader = new DefaultModelShader(),
+                    HatchShader = new HatchShader(),
                     TextRenderer = textRenderer
                 };
+                
 
                 ViewManager = new DefaultCameraViewManager();
                 ViewManager.Attach(evwrapper, camera1);
@@ -532,11 +550,17 @@ namespace dxfViewer
                         {
                             // triagnulate of success
                             var tr = TrianglesGpuObject.TriangulateWithHoles([contours[0].Points.ToArray()], []);
-                            PolylineGpuMeshSceneObject s = null;
+                            HatchGpuMeshSceneObject s = null;
                             glControl.Invoke(() =>
                             {
-                                s = new PolylineGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray())) { Color = new Vector3d(255, 128, 128) };
+                                s = new HatchGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray())) { 
+                                    
+                                    FillColor = new Vector3d(255, 128, 128),
+                                    Color = new Vector3d(255, 0, 0) 
+                                
+                                };
                             });
+                            s.CalcBbox(segments.ToArray());
                             toAdd.Add(s);
                         }
                         else
@@ -737,14 +761,19 @@ namespace dxfViewer
         {
             var d = AutoDialog.DialogHelpers.StartDialog();
             d.AddBoolField("drawAxes", "Draw axes", drawAxes);
+            d.AddBoolField("DrawHatches", "Draw hatches", DrawHatches);
             d.AddBoolField("FillHatchesOnLoad", "FillHatchesOnLoad", FillHatchesOnLoad);
+            d.AddOptionsField("HatchFillType", "Hatch fill type", ["solid", "hatch"], SolidHatchFilling ? 0 : 1);
             d.AddNumericField("PolylinePrecisionDivider", "PolylinePrecisionDivider", PolylinePrecisionDivider);
 
             if (!d.ShowDialog())
                 return;
 
+            DrawHatches = d.GetBoolField("DrawHatches");
             drawAxes = d.GetBoolField("drawAxes");
             FillHatchesOnLoad = d.GetBoolField("FillHatchesOnLoad");
+            SolidHatchFilling = d.GetOptionsFieldIdx("HatchFillType") == 0;
+            
             PolylinePrecisionDivider = d.GetNumericField("PolylinePrecisionDivider");
             dirty = true;
         }

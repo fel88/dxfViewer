@@ -1,3 +1,4 @@
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
 namespace dxfViewer
@@ -5,21 +6,49 @@ namespace dxfViewer
     public class GpuDrawingContext
     {
         public Camera Camera;
-        
+
         public Color ModelColor = Color.FromArgb(255, 128, 64);
-        Color LightColor = Color.FromArgb(255, 255, 255);
-        
+        public Color HatchColor = Color.FromArgb(255, 0, 0);
+
 
         public TextRenderer TextRenderer;
 
         public Shader ModelShader;
+        public HatchShader HatchShader;
+
+        public void SetHatchShader()
+        {
+            CurrentShader = HatchShader;
+            HatchShader.use();
+            // be sure to activate shader when setting uniforms/drawing objects
+            //   ModelShader.use();
+
+
+            HatchShader.SetColor(HatchColor.ToVector3());
+
+
+            SetCameraToShader();
+        }
+
+        public void SetCameraToShader()
+        {
+
+            // view/projection transformations       
+            CurrentShader.setMat4("projection", Camera.ProjectionMatrix);
+            CurrentShader.setMat4("view", Camera.ViewMatrix);
+
+            // world transformation
+            Matrix4 model = Matrix4.Identity;
+            CurrentShader.setMat4("model", model);
+        }
+        public Shader CurrentShader;
         public void SetModelShader()
         {
+            CurrentShader = ModelShader;
             ModelShader.use();
             // be sure to activate shader when setting uniforms/drawing objects
-            ModelShader.use();
-            
-            ModelShader.setVec3("viewPos", Camera.CameraFrom);
+            //   ModelShader.use();
+
 
             // light properties
             Vector3 color = new Vector3
@@ -31,16 +60,16 @@ namespace dxfViewer
             };
 
 
-            ModelShader.setVec3("color", color);            
+            ModelShader.setVec3("color", color);
 
-            
-            // view/projection transformations       
-            ModelShader.setMat4("projection", Camera.ProjectionMatrix);
-            ModelShader.setMat4("view", Camera.ViewMatrix);
 
-            // world transformation
-            Matrix4 model = Matrix4.Identity;
-            ModelShader.setMat4("model", model);
+            //ResetShader();
+            SetCameraToShader();
+        }
+
+        internal void ResetShader()
+        {
+            GL.UseProgram(0);
         }
     }
 }

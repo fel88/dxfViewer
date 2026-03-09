@@ -7,7 +7,6 @@ in vec3 FragPos;
 
 uniform vec3 color;
   
-uniform vec3 viewPos;
 
 
 void main()

@@ -1,11 +1,12 @@
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.IO;
+using System.Security.Policy;
 using System.Xml.Linq;
 
 namespace dxfViewer
 {
-    public class PolylineGpuMeshSceneObject : AbstractSceneObject, ISceneObject
+    public class HatchGpuMeshSceneObject : AbstractSceneObject, ISceneObject
     {
 
         public void RestoreXml(XElement elem)
@@ -19,12 +20,12 @@ namespace dxfViewer
         }
 
         protected IGpuObject gpuObject;
-        public PolylineGpuMeshSceneObject()
+        public HatchGpuMeshSceneObject()
         {
 
         }
 
-        public PolylineGpuMeshSceneObject(IGpuObject gpuObject)
+        public HatchGpuMeshSceneObject(IGpuObject gpuObject)
         {
             this.gpuObject = gpuObject;
         }
@@ -41,8 +42,9 @@ namespace dxfViewer
 
 
 
-        public bool Fill { get; set; } = true;
+        public bool Fill { get; set; } = false;
         public Vector3d? Color { get; internal set; } = null;
+        public Vector3d? FillColor { get; internal set; } = null;
 
         public OpenTK.Mathematics.Matrix4 ToMatrix4(Matrix4d matrix4d)
         {
@@ -54,6 +56,7 @@ namespace dxfViewer
             );
             return matrix4;
         }
+
 
 
 
@@ -71,23 +74,46 @@ namespace dxfViewer
 
             Matrix4d dd = Matrix;
             GL.MultMatrix(ref dd);
-            
-            ctx.SetModelShader();
-            //ctx.ModelShader.use();
 
-            if (Color != null)
+            var temp = ctx.ModelColor;
+
+            if (Fill)
             {
-                ctx.CurrentShader.SetColor(Color.Value.ToVector3()/255);
+                ctx.SetModelShader();
             }
-                        
-            ctx.ModelShader.setMat4("model", ToMatrix4(dd));
+            else
+            {
+                ctx.SetHatchShader();
+            }
+
+
+            if (Fill && FillColor != null)
+            {                
+                ctx.CurrentShader.SetColor(FillColor.Value.ToVector3() / 255);
+
+            }
+            if (!Fill && Color != null)
+            {             
+                ctx.CurrentShader.SetColor(Color.Value.ToVector3() / 255);
+            }
+            //ctx.HatchShader.setp(s.End.X - s.Start.X, s.End.Y - s.Start.Y, d.zoom, new float[] { v3[0], v3[1], v3[2] });
+
+            ctx.CurrentShader.setMat4("model", ToMatrix4(dd));
             //ctx.ModelShader.setMat4("model", Matrix4.CreateTranslation((float)Offset.X, (float)Offset.Y, 0));
 
             gpuObject.Draw();
 
-            ctx.ResetShader();            
+            ctx.ResetShader();
 
-            
+            ctx.ModelColor = temp;
+            GL.Disable(EnableCap.Lighting);
+
+            if (Fill)
+            {
+
+
+            }
+
             GL.PopMatrix();
         }
 

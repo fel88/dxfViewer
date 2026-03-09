@@ -18,5 +18,18 @@ namespace dxfViewer
         {
             return new Vector2d(v.X, v.Y);
         }
+
+        public static Vector3 ToVector3(this Color _color)
+        {
+            // light properties
+            Vector3 color = new Vector3
+            {
+
+                X = _color.R / 255.0f,
+                Y = _color.G / 255.0f,
+                Z = _color.B / 255.0f
+            };
+            return color;
+        }
     }
 }

@@ -105,6 +105,14 @@ namespace dxfViewer
             GL.Uniform3(GL.GetUniformLocation(ID, v), ref newPos);
         }
 
+        public void SetColor(Vector3 color)
+        {
+          
+
+
+            setVec3("color", color);
+        }
+
         public void use()
         {
             GL.UseProgram(ID);
