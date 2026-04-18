@@ -332,7 +332,8 @@ namespace dxfViewer
             var p = MouseRay.UnProject(new Vector3(pos.X, pos.Y, 0), cam.ProjectionMatrix, cam.ViewMatrix, new Size(camera1.viewport[2], camera1.viewport[3]));
 
             var textColor = darkMode ? new Vector3(0.5f, 0.8f, 0.2f) : new Vector3(0, 0, 0);
-            textRenderer.UpdateWindowSize(glControl.Width, glControl.Height);
+            textRenderer.UpdateWindowSize(glControl.Width, glControl.Height);            
+            
             textRenderer.SetTextColor(textColor);
             textRenderer.RenderText($"X: {Math.Round(p.X, 2)}", 0, glControl.Height - textRenderer.FontSize);
             textRenderer.RenderText($"Y: {Math.Round(p.Y, 2)}", 0, glControl.Height - textRenderer.FontSize * 2);
