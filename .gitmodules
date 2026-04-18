@@ -1,0 +1,3 @@
+[submodule "FxEngine"]
+	path = FxEngine
+	url = https://github.com/fel88/FxEngine.git

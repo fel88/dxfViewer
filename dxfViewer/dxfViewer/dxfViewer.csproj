@@ -75,12 +75,6 @@
 	  <None Remove="Icons\question.png" />
 	  <None Remove="Icons\ruler-triangle.png" />
 	  <None Remove="Icons\wrench-screwdriver.png" />
-	  <None Remove="shaders\cam_space_shader.fs" />
-	  <None Remove="shaders\cam_space_shader.vs" />
-	  <None Remove="shaders\hatch.fs" />
-	  <None Remove="shaders\hatch.vs" />
-	  <None Remove="shaders\text.fs" />
-	  <None Remove="shaders\text.vs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -88,12 +82,6 @@
 	  <EmbeddedResource Include="fonts\Antonio-Light.ttf" />
 	  <EmbeddedResource Include="fonts\Antonio-Regular.ttf" />
 	  <EmbeddedResource Include="fonts\OCRAEXT.TTF" />
-	  <EmbeddedResource Include="shaders\cam_space_shader.fs" />
-	  <EmbeddedResource Include="shaders\cam_space_shader.vs" />
-	  <EmbeddedResource Include="shaders\hatch.fs" />
-	  <EmbeddedResource Include="shaders\hatch.vs" />
-	  <EmbeddedResource Include="shaders\text.fs" />
-	  <EmbeddedResource Include="shaders\text.vs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -106,6 +94,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\..\FxEngine\FxEngine\FxEngine.csproj" />
 	  <ProjectReference Include="..\Triangulate\Triangulate.csproj" />
 	</ItemGroup>
 

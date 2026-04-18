@@ -1,3 +1,5 @@
+using FxEngine;
+using FxEngine.Cameras;
 using OpenTK.Mathematics;
 
 namespace dxfViewer
@@ -6,17 +8,17 @@ namespace dxfViewer
     {
         public override void Update()
         {
-            var dir = Camera.CamFrom - Camera.CamTo;
+            var dir = Camera.Eye - Camera.Target;
             var cv = dir;
-            var moveVec = new Vector3(cv.X, cv.Y, 0).Normalized();
-            var a1 = Vector3.Cross(Camera.CamUp, cv.Normalized()); ;
+            var moveVec = new Vector3d(cv.X, cv.Y, 0).Normalized();
+            var a1 = Vector3d.Cross(Camera.Up, cv.Normalized()); ;
             //var moveVecTan = new Vector3(-moveVec.Y, moveVec.X, );
             var moveVecTan = a1.Normalized();
-            moveVec = Vector3.Cross(a1.Normalized(), cv.Normalized()).Normalized();
+            moveVec = Vector3d.Cross(a1.Normalized(), cv.Normalized()).Normalized();
 
 
             var pos = CursorPosition;
-            float zoom = 360f / (Camera.CamFrom - Camera.CamTo).Length;
+            var zoom = 360f / (Camera.Eye - Camera.Target).Length;
 
             {
                 if (drag2)
@@ -24,8 +26,8 @@ namespace dxfViewer
                     zoom = Control.Width / Camera.OrthoWidth;
 
                     var dx = moveVecTan * ((startPosX - pos.X) / zoom) + moveVec * ((startPosY - pos.Y) / zoom);
-                    Camera.CamFrom = cameraFromStart + dx;
-                    Camera.CamTo = cameraToStart + dx;
+                    Camera.Eye = cameraFromStart + dx;
+                    Camera.Target = cameraToStart + dx;
                 }
                 if (false && drag)
                 {
@@ -33,11 +35,11 @@ namespace dxfViewer
                     float kk = 3;
                     //cameraToStart = new Vector3(cameraToStart.X, 0, 0);
                     //Camera.CamTo = cameraToStart;
-                    Vector3 v1 = cameraFromStart - cameraToStart;
-                    
-                    var m1 = Matrix3.CreateFromAxisAngle(Vector3.Cross(v1, cameraUpStart), -(startPosY - pos.Y) / 180f / kk * (float)Math.PI);
+                    Vector3d v1 = cameraFromStart - cameraToStart;
+
+                    var m1 = Matrix3d.CreateFromAxisAngle(Vector3d.Cross(v1, cameraUpStart), -(startPosY - pos.Y) / 180f / kk * (float)Math.PI);
                     //var m1 = Matrix3.CreateFromAxisAngle(Vector3.UnitX, -(startPosY - pos.Y) / 180f / kk * (float)Math.PI);
-                    var m2 = Matrix3.CreateFromAxisAngle(cameraUpStart, -(startPosX - pos.X) / 180f / kk * (float)Math.PI);
+                    var m2 = Matrix3d.CreateFromAxisAngle(cameraUpStart, -(startPosX - pos.X) / 180f / kk * (float)Math.PI);
                     //var m2 = Matrix3.CreateFromAxisAngle(Vector3.UnitZ, -(startPosX - pos.X) / 180f / kk * (float)Math.PI);
 
                     v1 *= m1;
@@ -48,7 +50,7 @@ namespace dxfViewer
                     //up1 *= m2;
                     //Camera.CamUp = up1;
 
-                    Camera.CamFrom = cameraToStart + v1;
+                    Camera.Eye = cameraToStart + v1;
                     var dx = startPosX - pos.X;
 
                 }
@@ -81,7 +83,7 @@ namespace dxfViewer
             var camera = Camera;
             if (camera.IsOrtho)
             {
-                var shift = mr.Start - Camera.CamFrom;
+                var shift = mr.Start - Camera.Eye;
                 shift.Normalize();
                 var old = camera.OrthoWidth / Control.Width;
                 if (e.Delta > 0)
@@ -89,9 +91,9 @@ namespace dxfViewer
                     camera.OrthoWidth /= 1.2f;
                     //var pxn = new Vector2(cur.X,cur.Y)-(new Vector2(Control.Width/2,Control.Height/2));
                     Camera cam2 = new Camera();
-                    cam2.CamFrom = camera.CamFrom;
-                    cam2.CamTo = camera.CamTo;
-                    cam2.CamUp = camera.CamUp;
+                    cam2.Eye = camera.Eye;
+                    cam2.Target = camera.Target;
+                    cam2.Up = camera.Up;
                     cam2.OrthoWidth = camera.OrthoWidth;
                     cam2.IsOrtho = camera.IsOrtho;
 
@@ -103,8 +105,8 @@ namespace dxfViewer
 
 
                     shift *= diff.Length;
-                    camera.CamFrom += shift;
-                    camera.CamTo += shift;
+                    camera.Eye += shift;
+                    camera.Target += shift;
                 }
                 else
                 {
@@ -113,9 +115,9 @@ namespace dxfViewer
 
                     var a1 = pxn * camera.OrthoWidth / Control.Width;*/
                     Camera cam2 = new Camera();
-                    cam2.CamFrom = camera.CamFrom;
-                    cam2.CamTo = camera.CamTo;
-                    cam2.CamUp = camera.CamUp;
+                    cam2.Eye = camera.Eye;
+                    cam2.Target = camera.Target;
+                    cam2.Up = camera.Up;
                     cam2.OrthoWidth = camera.OrthoWidth;
                     cam2.IsOrtho = camera.IsOrtho;
 
@@ -124,8 +126,8 @@ namespace dxfViewer
 
                     var diff = mr.Start - mr2.Start;
                     shift *= diff.Length;
-                    camera.CamFrom -= shift;
-                    camera.CamTo -= shift;
+                    camera.Eye -= shift;
+                    camera.Target -= shift;
                 }
 
                 return;
@@ -138,13 +140,13 @@ namespace dxfViewer
                 dir.Normalize();
                 if (e.Delta > 0)
                 {
-                    camera.CamFrom += dir * zoomK;
-                    camera.CamTo += dir * zoomK;
+                    camera.Eye += dir * zoomK;
+                    camera.Target += dir * zoomK;
                 }
                 else
                 {
-                    camera.CamFrom -= dir * zoomK;
-                    camera.CamTo -= dir * zoomK;
+                    camera.Eye -= dir * zoomK;
+                    camera.Target -= dir * zoomK;
                 }
             }
         }
@@ -162,23 +164,8 @@ namespace dxfViewer
             lshift = false;
         }
 
-        protected bool lshiftcmd = false;
-        public static Vector3? lineIntersection(Vector3 planePoint, Vector3 planeNormal, Vector3 linePoint, Vector3 lineDirection)
-        {
-            if (Math.Abs(Vector3.Dot(planeNormal, lineDirection)) < 10e-6f)
-            {
-                return null;
-            }
-
-            var dot1 = Vector3.Dot(planeNormal, planePoint);
-            var dot2 = Vector3.Dot(planeNormal, linePoint);
-            var dot3 = Vector3.Dot(planeNormal, lineDirection);
-            double t = (dot1 - dot2) / dot3;
-            return linePoint + lineDirection * (float)t;
-        }
-
-        public bool SnapMode = false;
         
+
         public virtual void Control_MouseDown(object sender, MouseEventArgs e)
         {
             Control.MakeCurrent();
@@ -186,40 +173,25 @@ namespace dxfViewer
             var pos = CursorPosition;
             startPosX = pos.X;
             startPosY = pos.Y;
-            cameraFromStart = Camera.CamFrom;
-            cameraToStart = Camera.CamTo;
-            cameraUpStart = Camera.CamUp;
+            cameraFromStart = Camera.Eye;
+            cameraToStart = Camera.Target;
+            cameraUpStart = Camera.Up;
 
             if (e.Button == MouseButtons.Right)
             {
 
                 var mr = new MouseRay(pos.X, pos.Y, Camera);
-                var d1 = Camera.CamFrom - Camera.CamTo;
-                
+                var d1 = Camera.Eye - Camera.Target;
+
                 //var plane1 : forw
-                var crs1 = Vector3.Cross(cameraUpStart, d1);
-                var z1 = Vector3.UnitZ;
-                
-                 if (SnapMode)
-                {
+                var crs1 = Vector3d.Cross(cameraUpStart, d1);
+                var z1 = Vector3d.UnitZ;
 
 
 
-                    var inter = lineIntersection(Camera.CamTo, crs1, Vector3.Zero, Vector3.UnitX);
-                    if (inter != null)
-                    {
-                        drag = true;
-                        Camera.CamTo = inter.Value;
-                        cameraToStart = Camera.CamTo;
-                    }
-                }
-                else
-                {
-                    drag = true;
-                }
+                drag = true;
 
 
-                lshiftcmd = lshift;
             }
 
             if (e.Button == MouseButtons.Left)
@@ -234,9 +206,9 @@ namespace dxfViewer
         protected float startShiftY;
         protected float startPosX;
         protected float startPosY;
-        protected Vector3 cameraFromStart;
-        protected Vector3 cameraToStart;
-        protected Vector3 cameraUpStart;
+        protected Vector3d cameraFromStart;
+        protected Vector3d cameraToStart;
+        protected Vector3d cameraUpStart;
         public PointF CursorPosition
         {
             get

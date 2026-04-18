@@ -1,3 +1,6 @@
+using FxEngine.Cameras;
+using FxEngine.Interfaces;
+using FxEngine.Shaders;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
@@ -17,10 +20,10 @@ namespace dxfViewer
         public Color HatchColor = Color.FromArgb(255, 0, 0);
 
 
-        public TextRenderer TextRenderer;
+        public ITextRenderer TextRenderer;
 
         public Shader ModelShader;
-        public HatchShader HatchShader;
+        public Hatch2dShader HatchShader;
 
         public void SetHatchShader()
         {

@@ -1,3 +1,4 @@
+using FxEngine.Interfaces;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.IO;

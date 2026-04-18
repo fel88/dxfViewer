@@ -1,3 +1,4 @@
+using FxEngine.Interfaces;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using TriangleNet.Geometry;
@@ -5,14 +6,14 @@ using TriangleNet.Meshing;
 
 namespace dxfViewer
 {
-    public class TrianglesGpuObject : IDisposable, IGpuObject
+    public class Triangles2dGpuObject : IDisposable, IGpuObject
     {
         bool deleted = false;
 
 
         int VBO, VAO;
         int numVerts;
-        public TrianglesGpuObject(Vector2d[] verts)
+        public Triangles2dGpuObject(Vector2d[] verts)
         {
             int idx = 0;
             float[] vertices = new float[verts.Length * 2];
@@ -161,12 +162,16 @@ namespace dxfViewer
                 new IntPtr(sizeof(float) * verts3.Count), verts3.ToArray(), BufferUsageHint.DynamicDraw);
             GL.VertexPointer(3, VertexPointerType.Float, 0, 0);
             GL.EnableClientState(ArrayCap.VertexArray);
+            GL.BindVertexArray(0);
+
         }
 
         public void Draw()
         {
             GL.BindVertexArray(VAO);
             GL.DrawArrays(PrimitiveType.Triangles, 0, numVerts);
+            GL.BindVertexArray(0);
+
         }
 
         public void Dispose()

@@ -1,14 +1,14 @@
+using FxEngine;
+using FxEngine.Cameras;
+using FxEngine.Fonts;
+using FxEngine.Shaders;
 using netDxf.Collections;
 using netDxf.Entities;
 using OpenTK.GLControl;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using SharpFont;
 using System.Diagnostics;
-using System.Drawing.Drawing2D;
-using System.IO;
-using System.Windows.Forms;
-using System.Windows.Media.Media3D;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace dxfViewer
 {
@@ -98,7 +98,7 @@ namespace dxfViewer
         object hovered;
         Matrix4d hoveredMatrix;
         public EventWrapperGlControl evwrapper;
-        public Camera camera1;
+        public FxEngine.Cameras.Camera camera1;
         public CameraViewManager ViewManager;
         bool first = true;
 
@@ -249,13 +249,19 @@ namespace dxfViewer
 
             if (first)
             {
-                camera1 = new Camera() { IsOrtho = true, CamTo = new Vector3(0, 0, 0), CamFrom = new Vector3(0, 0, 100), CamUp = new Vector3(0, 1, 0) };
+                camera1 = new FxEngine.Cameras.Camera()
+                {
+                    IsOrtho = true,
+                    Target = new Vector3d(0, 0, 0),
+                    Eye = new Vector3d(0, 0, 100),
+                    Up = new Vector3d(0, 1, 0)
+                };
                 gpuCtx = new GpuDrawingContext()
                 {
                     Control = glControl,
                     Camera = camera1,
-                    ModelShader = new DefaultModelShader(),
-                    HatchShader = new HatchShader(),
+                    ModelShader = new Polyline2dShader(),
+                    HatchShader = new Hatch2dShader(),
                     TextRenderer = textRenderer
                 };
 
@@ -310,7 +316,7 @@ namespace dxfViewer
             GL.Enable(EnableCap.DepthTest);
         }
 
-        TextRenderer textRenderer = new TextRenderer();
+        FreeTypeTextRenderer textRenderer = new FreeTypeTextRenderer() { FontSize = 20 };
         private void DrawTextOverlay()
         {
             GL.Enable(EnableCap.CullFace);
@@ -326,11 +332,13 @@ namespace dxfViewer
             var p = MouseRay.UnProject(new Vector3(pos.X, pos.Y, 0), cam.ProjectionMatrix, cam.ViewMatrix, new Size(camera1.viewport[2], camera1.viewport[3]));
 
             var textColor = darkMode ? new Vector3(0.5f, 0.8f, 0.2f) : new Vector3(0, 0, 0);
-            textRenderer.RenderText(gpuCtx, $"X: {Math.Round(p.X, 2)}", 0, glControl.Height - textRenderer.FontSize, 1.0f, textColor);
-            textRenderer.RenderText(gpuCtx, $"Y: {Math.Round(p.Y, 2)}", 0, glControl.Height - textRenderer.FontSize * 2, 1.0f, textColor);
+            textRenderer.UpdateWindowSize(glControl.Width, glControl.Height);
+            textRenderer.SetTextColor(textColor);
+            textRenderer.RenderText($"X: {Math.Round(p.X, 2)}", 0, glControl.Height - textRenderer.FontSize);
+            textRenderer.RenderText($"Y: {Math.Round(p.Y, 2)}", 0, glControl.Height - textRenderer.FontSize * 2);
             //textRenderer.RenderText("(C) LearnOpenGL.com", 10.0f, glControl.Height - 30, 0.5f, new Vector3(0.3f, 0.7f, 0.9f));
             if (hovered != null)
-                textRenderer.RenderText(gpuCtx, "test", 10.0f, glControl.Height - 30, 0.5f, new Vector3(0.3f, 0.7f, 0.9f));
+                textRenderer.RenderText("test", 10.0f, glControl.Height - 30, new Vector3(0.3f, 0.7f, 0.9f), 0.5f);
 
             /*var pos = glControl.PointToClient(Cursor.Position);
             hoverText.Scale = 0.4f;
@@ -357,15 +365,17 @@ namespace dxfViewer
 
         internal void ResetCamera()
         {
-            camera1.CamTo = new Vector3(0, 0, 0);
-            camera1.CamFrom = new Vector3(0, 0, 100);
-            camera1.CamUp = new Vector3(0, 1, 0);
+            camera1.Target = new Vector3(0, 0, 0);
+            camera1.Eye = new Vector3(0, 0, 100);
+            camera1.Up = new Vector3(0, 1, 0);
             dirty = true;
         }
 
         internal async void OpenDxf()
         {
             OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "Dxf files (*.dxf)|*.dxf";
+
             if (ofd.ShowDialog() != DialogResult.OK)
                 return;
 
@@ -385,6 +395,7 @@ namespace dxfViewer
             });
             return g;
         }
+
         public static double RemoveThreshold = 10e-5;
         public static double ClosingThreshold = 10e-2;
 
@@ -577,11 +588,11 @@ namespace dxfViewer
                             try
                             {
                                 // triagnulate of success
-                                var tr = TrianglesGpuObject.TriangulateWithHoles([root.Points.ToArray()], root.Childrens.Select(z => z.Points.ToArray()).ToArray());
+                                var tr = Triangles2dGpuObject.TriangulateWithHoles([root.Points.ToArray()], root.Childrens.Select(z => z.Points.ToArray()).ToArray());
                                 HatchGpuMeshSceneObject s = null;
                                 glControl.Invoke(() =>
                                 {
-                                    s = new HatchGpuMeshSceneObject(new TrianglesGpuObject(tr.SelectMany(z => z).ToArray()))
+                                    s = new HatchGpuMeshSceneObject(new Triangles2dGpuObject(tr.SelectMany(z => z).ToArray()))
                                     {
 
                                         FillColor = new Vector3d(255, 128, 128),
@@ -857,53 +868,15 @@ namespace dxfViewer
             dirty = true;
         }
 
-        public void FitToPoints(Vector2d[] pnts, Camera cam, float gap = 10)
-        {
-            List<Vector2d> vv = new List<Vector2d>();
-            foreach (var vertex in pnts)
-            {
-                var p = MouseRay.Project(vertex.ToVector3(), cam.ProjectionMatrix, cam.ViewMatrix, cam.WorldMatrix, camera1.viewport);
-                vv.Add(p.Xy.ToVector2d());
-            }
-
-            //prjs->xy coords
-            var minx = vv.Min(z => z.X) - gap;
-            var maxx = vv.Max(z => z.X) + gap;
-            var miny = vv.Min(z => z.Y) - gap;
-            var maxy = vv.Max(z => z.Y) + gap;
-
-            var dx = (maxx - minx);
-            var dy = (maxy - miny);
-
-            var cx = dx / 2;
-            var cy = dy / 2;
-            var dir = cam.CamTo - cam.CamFrom;
-            //center back to 3d
-
-            var mr = new MouseRay((float)(cx + minx), (float)(cy + miny), cam);
-            var v0 = mr.Start;
-
-            cam.CamFrom = v0;
-            cam.CamTo = cam.CamFrom + dir;
-
-            var aspect = glControl.Width / (float)(glControl.Height);
-
-            dx /= glControl.Width;
-            dx *= camera1.OrthoWidth;
-            dy /= glControl.Height;
-            dy *= camera1.OrthoWidth;
-
-            cam.OrthoWidth = (float)Math.Max(dx, dy);
-        }
         internal void FitAll()
         {
             var pnts = Parts.SelectMany(z => z.GetPoints()).ToArray();
             if (!pnts.Any())
                 return;
-
-            FitToPoints(pnts, camera1);
+                        
+            camera1.FitToPoints(pnts.Select(x => new Vector3d(x.X, x.Y, 0)).ToArray(), glControl.Width, glControl.Height);
             dirty = true;
-        }
+        }        
 
         internal void Centrify()
         {
@@ -938,6 +911,8 @@ namespace dxfViewer
         internal async void ImportDxf()
         {
             OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "Dxf files (*.dxf)|*.dxf";
+
             if (ofd.ShowDialog() != DialogResult.OK)
                 return;
 
