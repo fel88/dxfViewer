@@ -2,9 +2,9 @@
 
 OpenGL based dxf viewer
 
-<img width="600" height="810" alt="image" src="https://github.com/user-attachments/assets/71d29008-dd5c-4e61-82ee-eea4be6285ac" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/71d29008-dd5c-4e61-82ee-eea4be6285ac" />
 
-<img width="600" height="810" alt="image" src="https://github.com/user-attachments/assets/9c67014c-2c08-4fa2-a248-16d71c820fa8" />
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/9c67014c-2c08-4fa2-a248-16d71c820fa8" />
 
 
 ## References:
